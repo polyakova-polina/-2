@@ -5,23 +5,31 @@ import matplotlib.pyplot as plt
 from cirq.circuits import InsertStrategy
 def make_CX_qutrits(q):
     return x(q[1]).controlled_by(q[0])
+
 def make_CCX_qutrits(q):
     return (x(q[2]).controlled_by(q[0])).controlled_by(q[1])
+
 def make_CX_qutrits_conj(q):
     return x_conj(q[1]).controlled_by(q[0])
+
 def make_CCX_qutrits_conj(q):
     return (x_conj(q[2]).controlled_by(q[0])).controlled_by(q[1])
+
+def make_CZ_qutrits(q):
+    return z(q[1]).controlled_by(q[0])
+
 class H(cirq.Gate):
     def _qid_shape_(self):
         return (3,)
+
     def _unitary_(self):
-        return np.conj(1/(2**0.5)*np.array([[1, 1, 0],
-                         [1, -1, 0],
-                         [0, 0, 2**0.5]]))
+        return np.conj(1 / (2 ** 0.5) * np.array([[1, 1, 0],
+                                                  [1, -1, 0],
+                                                  [0, 0, 2 ** 0.5]]))
+
     def _circuit_diagram_info_(self, args):
         return '[+1]'
-def make_CZ_qutrits(q):
-    return z(q[1]).controlled_by(q[0])
+
 class X1_conj(cirq.Gate):
 
     def _qid_shape_(self):
@@ -34,6 +42,7 @@ class X1_conj(cirq.Gate):
 
     def _circuit_diagram_info_(self, args):
         return '[+1]'
+
 class X2_conj(cirq.Gate):
 
     def _qid_shape_(self):
@@ -49,6 +58,7 @@ class X2_conj(cirq.Gate):
 
     def _circuit_diagram_info_(self, args):
         return '[+1]'
+
 class Z1(cirq.Gate):
 
     def _qid_shape_(self):
@@ -64,6 +74,7 @@ class Z1(cirq.Gate):
 
     def _circuit_diagram_info_(self, args):
         return '[+1]'
+
 class X2(cirq.Gate):
 
     def _qid_shape_(self):
@@ -79,6 +90,7 @@ class X2(cirq.Gate):
 
     def _circuit_diagram_info_(self, args):
         return '[+1]'
+
 class X1(cirq.Gate):
     """Ворота, которые добавляют единицу в вычислительную основу кутрита.
 
@@ -104,6 +116,7 @@ class X1(cirq.Gate):
 
     def _circuit_diagram_info_(self, args):
         return '[+1]'
+
 def svertka(circuit, controling_qutrits, k):
     for i in range(1, k // 2):
         i -= 1
@@ -127,6 +140,7 @@ def svertka(circuit, controling_qutrits, k):
         circuit.append([curr_cx], strategy=InsertStrategy.INLINE)
         circuit.append([curr_x], strategy=InsertStrategy.INLINE)
         k += 1
+
 def main_operation(circuit, controling_qutrits, target_qutrit, k):
     curl_x2 = x2(target_qutrit)
     curl_cx = make_CX_qutrits([controling_qutrits[k // 2 - 1], target_qutrit])
@@ -136,6 +150,7 @@ def main_operation(circuit, controling_qutrits, target_qutrit, k):
     circuit.append([curl_cx], strategy=InsertStrategy.INLINE)
     circuit.append([curl_x], strategy=InsertStrategy.INLINE)
     circuit.append([curr_cz], strategy=InsertStrategy.INLINE)
+
 def razvertka(circuit, controling_qutrits, target_qutrit, k):
     curl_x2 = x2_conj(target_qutrit)
     curl_cx = make_CX_qutrits_conj([controling_qutrits[k // 2 - 1], target_qutrit])
@@ -168,6 +183,7 @@ def razvertka(circuit, controling_qutrits, target_qutrit, k):
         circuit.append([curl_x, curr_x], strategy=InsertStrategy.INLINE)
         circuit.append([curl_cx, curr_cx], strategy=InsertStrategy.INLINE)
         circuit.append([curl_x2, curr_x2], strategy=InsertStrategy.INLINE)
+
 def CnX(circuit, cq, tq):
     k = len(cq)
     h = H()
@@ -176,6 +192,7 @@ def CnX(circuit, cq, tq):
     main_operation(circuit, cq, tq, k)
     razvertka(circuit, cq, tq, k)
     circuit.append([h(tq)])
+
 def encoding_qubit(circuit, log_qubit):
 
     x = X1()
@@ -227,6 +244,7 @@ def encoding_qubit(circuit, log_qubit):
 
     cur_cz = make_CZ_qutrits([q4, q5])
     circuit.append([cur_cz], strategy=InsertStrategy.INLINE)
+
 def decoding_qubit(circuit, log_qubit):
     x = X1()
     x_conj = X1_conj()
@@ -275,6 +293,7 @@ def decoding_qubit(circuit, log_qubit):
 
     gates = [h(q2), h(q3), h(q4)]
     circuit.append(gates, strategy=InsertStrategy.INLINE)
+
 def X1_l(circuit, lqubits):
   x = X1()
   z = Z1()
@@ -283,6 +302,7 @@ def X1_l(circuit, lqubits):
   circuit.append(gates, strategy=InsertStrategy.INLINE)
   gates = [x(q1), x(q2),x(q3),x(q4),x(q5)]
   circuit.append(gates, strategy=InsertStrategy.INLINE)
+
 def Z1_l(circuit, lqubits):
   q1, q2, q3, q4, q5 = lqubits[0], lqubits[1], lqubits[2], lqubits[3], lqubits[4]
   gates = [make_CX_qutrits([q1, q2])]
@@ -314,6 +334,8 @@ gates1 = [x2(qutrits1[0])]
 circuit1.append(gates1)
 
 encoding_qubit(circuit1, qutrits1)
+X1_l(circuit1, qutrits1)
+
 #svertka(circuit1, qutrits1[0:-1], 2)
 #main_operation(circuit1, qutrits1[0:-1], qutrits1[-1], 2)
 #razvertka(circuit1, qutrits1[0:-1], qutrits1[-1], 2)
