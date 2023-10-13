@@ -204,25 +204,25 @@ def encoding_qubit(circuit, log_qubit):
     circuit.append(gates, strategy=InsertStrategy.INLINE)
 
 
-    '''
+
     svertka(circuit, [q1, q3], 2)
     main_operation(circuit, [q1, q3], q4, 2)
     razvertka(circuit, [q1, q3], q4, 2)
     '''
     cur_ccx = make_CCX_qutrits([q1, q2, q3])
     circuit.append([cur_ccx], strategy=InsertStrategy.INLINE)
-
+    '''
     gates = [x(q3), x(q4)]
     circuit.append(gates, strategy=InsertStrategy.INLINE)
 
-    '''
+
     svertka(circuit, [q4, q3], 2)
     main_operation(circuit, [q4, q3], q1, 2)
     razvertka(circuit, [q4, q3], q1, 2)
     '''
     cur_ccx = make_CCX_qutrits([q4, q3, q1])
     circuit.append([cur_ccx], strategy=InsertStrategy.INLINE)
-
+    '''
 
     gates = [x(q3), x(q4)]
     circuit.append(gates, strategy=InsertStrategy.INLINE)
@@ -272,7 +272,7 @@ def decoding_qubit(circuit, log_qubit):
 
     gates = [x(q3), x(q4)]
     circuit.append(gates, strategy=InsertStrategy.INLINE)
-    '''
+
     svertka(circuit, [q1, q3], 2)
     main_operation(circuit, [q1, q3], q4, 2)
     razvertka(circuit, [q1, q3], q4, 2)
@@ -280,17 +280,17 @@ def decoding_qubit(circuit, log_qubit):
 
     cur_ccx = make_CCX_qutrits([q1, q3, q4])
     circuit.append([cur_ccx], strategy=InsertStrategy.INLINE)
-
+    '''
     gates = [x(q3), x(q4)]
     circuit.append(gates, strategy=InsertStrategy.INLINE)
-    '''
+
     svertka(circuit, [q1, q3], 2)
     main_operation(circuit, [q1, q3], q4, 2)
     razvertka(circuit, [q1, q3], q4, 2)
     '''
     cur_ccx = make_CCX_qutrits([q1, q3, q4])
     circuit.append([cur_ccx], strategy=InsertStrategy.INLINE)
-
+    '''
     gates = [h(q2), h(q3), h(q4)]
     circuit.append(gates, strategy=InsertStrategy.INLINE)
 
@@ -303,18 +303,66 @@ def X1_l(circuit, lqubits):
   gates = [x(q1), x(q2),x(q3),x(q4),x(q5)]
   circuit.append(gates, strategy=InsertStrategy.INLINE)
 
+
 def Z1_l(circuit, lqubits):
-  q1, q2, q3, q4, q5 = lqubits[0], lqubits[1], lqubits[2], lqubits[3], lqubits[4]
-  gates = [make_CX_qutrits([q1, q2])]
-  circuit.append(gates, strategy=InsertStrategy.INLINE)
-  gates = [make_CX_qutrits([q4, q3])]
-  circuit.append(gates, strategy=InsertStrategy.INLINE)
-  gates = [z(q1),z(q2),z(q3),z(q4),z(q5)]
-  circuit.append(gates, strategy=InsertStrategy.INLINE)
-  gates = [make_CX_qutrits([q1, q2])]
-  circuit.append(gates, strategy=InsertStrategy.INLINE)
-  gates = [make_CX_qutrits([q4, q3])]
-  circuit.append(gates, strategy=InsertStrategy.INLINE)
+    z = Z1()
+    q1, q2, q3, q4, q5 = lqubits[0], lqubits[1], lqubits[2], lqubits[3], lqubits[4]
+    gates = [make_CX_qutrits([q1, q2])]
+    circuit.append(gates, strategy=InsertStrategy.INLINE)
+    gates = [make_CX_qutrits([q4, q3])]
+    circuit.append(gates, strategy=InsertStrategy.INLINE)
+    gates = [z(q1), z(q2), z(q3), z(q4), z(q5)]
+    circuit.append(gates, strategy=InsertStrategy.INLINE)
+    gates = [make_CX_qutrits([q1, q2])]
+    circuit.append(gates, strategy=InsertStrategy.INLINE)
+    gates = [make_CX_qutrits([q4, q3])]
+    circuit.append(gates, strategy=InsertStrategy.INLINE)
+
+def H_l(circuit, lqubits):
+    h = H()
+    #x = X1()
+    q1, q2, q3, q4, q5 = lqubits[0], lqubits[1], lqubits[2], lqubits[3], lqubits[4]
+    gates = [make_CX_qutrits([q2, q5])]
+    circuit.append(gates, strategy=InsertStrategy.INLINE)
+    gates = [make_CX_qutrits([q3, q5])]
+    circuit.append(gates, strategy=InsertStrategy.INLINE)
+    gates = [make_CZ_qutrits([q5, q4])]
+    circuit.append(gates, strategy=InsertStrategy.INLINE)
+    gates = [make_CZ_qutrits([q5, q1])]
+    circuit.append(gates, strategy=InsertStrategy.INLINE)
+
+    gates = [make_CX_qutrits([q5, q1])]
+    circuit.append(gates, strategy=InsertStrategy.INLINE)
+    gates = [make_CX_qutrits([q5, q2])]
+    circuit.append(gates, strategy=InsertStrategy.INLINE)
+    gates = [make_CX_qutrits([q5, q3])]
+    circuit.append(gates, strategy=InsertStrategy.INLINE)
+    gates = [make_CX_qutrits([q5, q4])]
+    circuit.append(gates, strategy=InsertStrategy.INLINE)
+
+    gates = [h(q5)]
+    circuit.append(gates, strategy=InsertStrategy.INLINE)
+
+    gates = [make_CX_qutrits([q5, q4])]
+    circuit.append(gates, strategy=InsertStrategy.INLINE)
+    gates = [make_CX_qutrits([q5, q3])]
+    circuit.append(gates, strategy=InsertStrategy.INLINE)
+    gates = [make_CX_qutrits([q5, q2])]
+    circuit.append(gates, strategy=InsertStrategy.INLINE)
+    gates = [make_CX_qutrits([q5, q1])]
+    circuit.append(gates, strategy=InsertStrategy.INLINE)
+    ''''''
+
+    #circuit.append(gates, strategy=InsertStrategy.INLINE)
+    gates = [make_CZ_qutrits([q5, q4])]
+    circuit.append(gates, strategy=InsertStrategy.INLINE)
+    gates = [make_CZ_qutrits([q5, q1])]
+    circuit.append(gates, strategy=InsertStrategy.INLINE)
+    #circuit.append(gates, strategy=InsertStrategy.INLINE)
+    gates = [make_CX_qutrits([q3, q5])]
+    circuit.append(gates, strategy=InsertStrategy.INLINE)
+    gates = [make_CX_qutrits([q2, q5])]
+    circuit.append(gates, strategy=InsertStrategy.INLINE)
 
 x = X1()
 x2 = X2()
@@ -330,16 +378,19 @@ qutrits1 = []
 for i in range(5):
     qutrits1.append(cirq.LineQid(i, dimension=3))
 
-gates1 = [x2(qutrits1[0])]
+gates1 = [x(qutrits1[0])]
+circuit1.append(gates1)
+gates1 = [h(qutrits1[0])]
 circuit1.append(gates1)
 
 encoding_qubit(circuit1, qutrits1)
-X1_l(circuit1, qutrits1)
+
+H_l(circuit1, qutrits1)
 
 #svertka(circuit1, qutrits1[0:-1], 2)
 #main_operation(circuit1, qutrits1[0:-1], qutrits1[-1], 2)
 #razvertka(circuit1, qutrits1[0:-1], qutrits1[-1], 2)
-#decoding_qubit(circuit1, qutrits1)
+decoding_qubit(circuit1, qutrits1)
 
 res1 = sim.simulate(circuit1)
 print(circuit1)
