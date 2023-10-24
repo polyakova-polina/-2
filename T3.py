@@ -4,6 +4,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from cirq.circuits import InsertStrategy
 from scipy import linalg
+from cirq import protocols
+from cirq.testing import gate_features
+
+
 
 def R(fi, hi, i = 0, j = 1):
     I = np.array([[1,0,0],[0,1,0],[0,0,1]])
@@ -38,7 +42,6 @@ def R(fi, hi, i = 0, j = 1):
 
     return linalg.expm(complex(0,-1) * m * hi / 2)
 
-
 def make_ms_matrix(fi, hi, i = 0, j = 1, k = 0, l = 1):
     x_for_ms = np.array([[0,1,0],
                          [1,0,0],
@@ -50,7 +53,61 @@ def make_ms_matrix(fi, hi, i = 0, j = 1, k = 0, l = 1):
     m = complex(0, -1) * m * hi
     return linalg.expm(m)
 
+class TwoQuditMSGate3_c(gate_features.TwoQubitGate
+                      ):
 
+    def _json_dict_(self):
+        return {
+            'cirq_type': self.__class__.__name__
+        }
+
+    @classmethod
+    def _from_json_dict_(cls, **kwargs):
+        return cls()
+
+    def _qid_shape_(self):
+        return (3, 3,)
+
+    def _unitary_(self):
+        matrix = make_ms_matrix(0, -np.pi/2)
+        return matrix
+
+    def num_controls(self):
+        return 2
+
+    def _circuit_diagram_info_(self, args: 'cirq.CircuitDiagramInfoArgs'
+                               ) -> 'cirq.CircuitDiagramInfo':
+        return protocols.CircuitDiagramInfo(
+            wire_symbols=('XX0101_c',
+                          'XX0101_c'))
+
+class TwoQuditMSGate3(gate_features.TwoQubitGate
+                      ):
+
+    def _json_dict_(self):
+        return {
+            'cirq_type': self.__class__.__name__
+        }
+
+    @classmethod
+    def _from_json_dict_(cls, **kwargs):
+        return cls()
+
+    def _qid_shape_(self):
+        return (3, 3,)
+
+    def _unitary_(self):
+        matrix = make_ms_matrix(0, np.pi/2)
+        return matrix
+
+    def num_controls(self):
+        return 2
+
+    def _circuit_diagram_info_(self, args: 'cirq.CircuitDiagramInfoArgs'
+                               ) -> 'cirq.CircuitDiagramInfo':
+        return protocols.CircuitDiagramInfo(
+            wire_symbols=('XX0101',
+                          'XX0101'))
 
 '''
 
@@ -82,10 +139,10 @@ circ = cirq.Circuit(
     
 '''
 
-
 class U(cirq.Gate):
-    def __init__(self, mat):
+    def __init__(self, mat, diag_i = 'R'):
         self.mat = mat
+        self.diag_info = diag_i
     def _qid_shape_(self):
         return (3,)
 
@@ -94,25 +151,124 @@ class U(cirq.Gate):
 
 
     def _circuit_diagram_info_(self, args):
-        return '[+1]'
+        return self.diag_info
 
 def make_CX_gate(q):
     x = psevdo_X1()
     return x(q[1]).controlled_by(q[0])
 
-def CX(cirquit, q1, q2):
+def CX_prot(cirquit, q1, q2):
     U_iii = iii()
     cirquit.append([U_iii(q1)], strategy=InsertStrategy.INLINE)
     cirquit.append([make_CX_gate([q1,q2])], strategy=InsertStrategy.INLINE)
+
+def CX(cirquit, q1, q2):
+    u1 = U(R(0, -np.pi, 1, 2), 'Rx(-π)12')
+    u2 = U(R(np.pi / 2, np.pi / 2, 0, 1), 'Ry(π/2)01')
+    u3 = U(R(0, -np.pi, 0, 1), 'Rx(-π)01')
+    u4 = U(R(np.pi / 2, -np.pi / 2, 0, 1), 'Ry(-π/2)01')
+    u5 = U(R(0, np.pi, 1, 2), 'Rx(π)12')
+
+    xx_c = make_ms_matrix(0, -np.pi / 2)
+    x01 = U(R(0, np.pi, 0,1))
+    u_iii = iii()
+    # print(np.conj(xx))
+    # print()
+    cirquit.append([u1(q1)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u2(q1)], strategy=InsertStrategy.INLINE)
+
+    '''
+    x12 = U(R(0, np.pi, 1, 2))
+    u_1i1 = eie()
+    u_emm = emm()
+    cirquit.append([x01(q1), x01(q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u_iii(q1)], strategy=InsertStrategy.INLINE)
+    cirquit.append([x12(q1), x12(q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append((u_1i1(q2).controlled_by(q1)))
+    cirquit.append([x12(q1), x12(q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u_emm(q1), u_emm(q2)])
+    '''
+    xx = TwoQuditMSGate3()
+    cirquit.append([xx(q1, q2)], strategy=InsertStrategy.INLINE)
+
+    cirquit.append([u3(q1), u3(q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u4(q1)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u5(q1)], strategy=InsertStrategy.INLINE)
+    #U2 = np.kron(u1, I) @ np.kron(u2, I) @ xx @ np.kron(u3, u3) @ np.kron(u4, I) @ np.kron(u5, I)
 
 def make_CCX_gate(q):
     x = psevdo_X1()
     return (x(q[2]).controlled_by(q[0])).controlled_by(q[1])
 
-def CCX(cirquit, q1, q2, q3):
+def CCX_prot(cirquit, q1, q2, q3):
     U_iii = iii()
     cirquit.append([U_iii(q1)], strategy=InsertStrategy.INLINE)
     cirquit.append([make_CCX_gate([q1, q2, q3])], strategy=InsertStrategy.INLINE)
+
+def U1(cirquit, q1, q2):
+    u1 = U(R(0, -np.pi, 1, 2), 'Rx(-π)12')
+
+    u2 = U(R(np.pi / 2, np.pi / 2, 0, 1), 'Ry(π/2)01')
+
+    u6 = U(R(np.pi / 2, -np.pi, 0, 2), 'Ry(-π)02')
+
+
+    cirquit.append([u1(q1), u6(q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u2(q1)], strategy=InsertStrategy.INLINE)
+
+    x01 = U(R(0, np.pi, 0, 1))
+    u_iii = iii()
+    x12 = U(R(0, np.pi, 1, 2))
+    u_1i1 = eie()
+    u_emm = emm()
+
+    xx = TwoQuditMSGate3()
+    cirquit.append([xx(q1, q2)], strategy=InsertStrategy.INLINE)
+
+    '''
+    cirquit.append([x01(q1), x01(q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u_iii(q1)], strategy=InsertStrategy.INLINE)
+    cirquit.append([x12(q1), x12(q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append((u_1i1(q2).controlled_by(q1)))
+    cirquit.append([x12(q1), x12(q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u_emm(q1), u_emm(q2)])
+    '''
+
+def U1_c(cirquit, q1, q2):
+    u1 = U(R(0, np.pi, 1, 2), 'Rx(π)12')
+
+    u2 = U(R(np.pi / 2, -np.pi / 2, 0, 1), 'Ry(-π/2)01')
+
+    u6 = U(R(np.pi / 2, np.pi, 0, 2), 'Ry(π)02')
+
+
+    x01 = U(R(0, np.pi, 0, 1))
+    u_iii = U(np.conj(np.array([[complex(0,1),0,0],[0,complex(0,1),0], [0,0,complex(0,1)]])))
+    x12 = U(R(0, np.pi, 1, 2))
+    u_1i1 = U(np.conj(np.array([[1,0,0],[0,complex(0,-1),0], [0,0,1]])))
+    u_emm = U(np.conj(np.array([[1,0,0],[0, -1,0], [0,0,-1]])))
+
+    '''
+    cirquit.append([u_emm(q1), u_emm(q2)])
+    cirquit.append([x12(q1), x12(q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append((u_1i1(q2).controlled_by(q1)))
+    cirquit.append([x12(q1), x12(q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u_iii(q1)], strategy=InsertStrategy.INLINE)
+    cirquit.append([x01(q1), x01(q2)], strategy=InsertStrategy.INLINE)
+    '''
+    xx_c = TwoQuditMSGate3_c()
+    cirquit.append([xx_c(q1, q2)], strategy=InsertStrategy.INLINE)
+
+
+    cirquit.append([u2(q1)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u1(q1), u6(q2)], strategy=InsertStrategy.INLINE)
+
+def CCX(cirquit, q1, q2, q3):
+    U1(cirquit, q1, q2)
+    CX(cirquit, q2, q3)
+    U1_c(cirquit, q1, q2)
+
+
 
 
 '''
@@ -132,9 +288,8 @@ def CZ(cirquit, q1, q2):
 def CCZ(cirquit, q1, q2, q3):
     h = H()
     cirquit.append(h(q3), strategy=InsertStrategy.INLINE)
-    cirquit.append([make_CCX_gate([q1, q2, q3])], strategy=InsertStrategy.INLINE)
+    CCX(cirquit, q1, q2, q3)
     cirquit.append(h(q3), strategy=InsertStrategy.INLINE)
-
 
 class H(cirq.Gate):
     def _qid_shape_(self):
@@ -147,8 +302,7 @@ class H(cirq.Gate):
 
 
     def _circuit_diagram_info_(self, args):
-        return '[+1]'
-
+        return 'H'
 
 class iii(cirq.Gate):
 
@@ -164,7 +318,39 @@ class iii(cirq.Gate):
         return np.array([[complex(0,1),0,0],[0,complex(0,1),0], [0,0,complex(0,1)]])
 
     def _circuit_diagram_info_(self, args):
-        return '[+1]'
+        return 'iii'
+
+class emm(cirq.Gate):
+
+    def _qid_shape_(self):
+        return (3,)
+
+    def _unitary_(self):
+        '''
+        return np.conj(np.array([[0, 1, 0],
+                                 [1, 0, 0],
+                                 [0, 0, 1]]))
+        '''
+        return np.array([[1,0,0],[0, -1,0], [0,0,-1]])
+
+    def _circuit_diagram_info_(self, args):
+        return 'emm'
+
+class eie(cirq.Gate):
+
+    def _qid_shape_(self):
+        return (3,)
+
+    def _unitary_(self):
+        '''
+        return np.conj(np.array([[0, 1, 0],
+                                 [1, 0, 0],
+                                 [0, 0, 1]]))
+        '''
+        return np.array([[1,0,0],[0,complex(0,-1),0], [0,0,1]])
+
+    def _circuit_diagram_info_(self, args):
+        return 'eie'
 
 class X1_conj(cirq.Gate):
 
@@ -180,7 +366,7 @@ class X1_conj(cirq.Gate):
         return np.array([[0,complex(0,-1),0],[complex(0,-1),0,0], [0,0,1]])
 
     def _circuit_diagram_info_(self, args):
-        return '[+1]'
+        return 'X1_c'
 
 class X2_conj(cirq.Gate):
 
@@ -200,7 +386,7 @@ class X2_conj(cirq.Gate):
                                  [complex(0, -1), 0, 0]]))
 
     def _circuit_diagram_info_(self, args):
-        return '[+1]'
+        return 'X2_c'
 
 class Z1(cirq.Gate):
 
@@ -218,7 +404,7 @@ class Z1(cirq.Gate):
         return R(0, np.pi,0,1) @ R(np.pi / 2, np.pi, 0, 1)
 
     def _circuit_diagram_info_(self, args):
-        return '[+1]'
+        return 'Z1'
 
 class X2(cirq.Gate):
 
@@ -236,7 +422,7 @@ class X2(cirq.Gate):
         return R(0, np.pi, 0,2)
 
     def _circuit_diagram_info_(self, args):
-        return '[+1]'
+        return 'X2'
 
 class psevdo_X1(cirq.Gate):
     """Ворота, которые добавляют единицу в вычислительную основу кутрита.
@@ -262,7 +448,7 @@ class psevdo_X1(cirq.Gate):
 
 
     def _circuit_diagram_info_(self, args):
-        return '[+1]'
+        return 'x1p'
 
 class X1(cirq.Gate):
 
@@ -280,7 +466,7 @@ class X1(cirq.Gate):
 
 
     def _circuit_diagram_info_(self, args):
-        return '[+1]'
+        return 'X1'
 
 def svertka(circuit, controling_qutrits, k):
     for i in range(1, k // 2):
@@ -495,6 +681,24 @@ def Z1_l(circuit, lqubits):
     CX(q4, q3)
     #circuit.append(gates, strategy=InsertStrategy.INLINE)
 
+def ZXXZI(cirquit, qudits, a1):
+    CZ(cirquit, qudits[0], a1)
+    CX(cirquit, a1, qudits[1])
+    CX(cirquit, a1, qudits[2])
+    CZ(cirquit, qudits[3], a1)
+    cirquit.append([cirq.measure(a1)])
+
+def ZXXZI_r(cirquit, qudits, a1):
+    CZ(cirquit, qudits[3], a1)
+    CX(cirquit, a1, qudits[2])
+    CX(cirquit, a1, qudits[1])
+    CZ(cirquit, qudits[0], a1)
+
+    cirquit.append([cirq.measure(a1)])
+
+#def stabilizer_mesurements(cirquit, qudits):
+
+
 '''
 def H_l(circuit, lqubits):
     h = H()
@@ -555,32 +759,54 @@ sim = cirq.Simulator()
 circuit1 = cirq.Circuit()
 qutrits1 = []
 
-for i in range(5):
+for i in range(10):
     qutrits1.append(cirq.LineQid(i, dimension=3))
 
-gates1 = [x(qutrits1[0])]
-circuit1.append(gates1)
-gates1 = [z(qutrits1[0])]
+gates1 = [x2(qutrits1[0])]
+#circuit1.append(gates1)
+gates1 = [x(qutrits1[5])]
 #circuit1.append(gates1)
 gates1 = [h(qutrits1[0])]
-circuit1.append(gates1)
+#circuit1.append(gates1)
 #gates1 = [cx(qutrits1[0], qutrits1[1])]
 #circuit1.append(cx.on(qutrits1[0], qutrits1[1]))
-
-
-
 encoding_qubit(circuit1, qutrits1)
+gates1 = [z(qutrits1[3])]
+circuit1.append(gates1)
+gates1 = [x(qutrits1[5])]
+#circuit1.append(gates1)
+
+
+
+
+ZXXZI(circuit1, qutrits1, qutrits1[5])\
+
+res1 = sim.simulate(circuit1)
+measured_bit = res1.measurements[str(qutrits1[5])][0]
+print(f'Measured bit: {measured_bit}')
+
+ZXXZI_r(circuit1, qutrits1, qutrits1[5])
+
+
 
 #H_l(circuit1, qutrits1)
 #make_CXR(circuit1, [qutrits1[0], qutrits1[1]])
 #svertka(circuit1, qutrits1[0:-1], 2)
 #main_operation(circuit1, qutrits1[0:-1], qutrits1[-1], 2)
 #razvertka(circuit1, qutrits1[0:-1], qutrits1[-1], 2)
-decoding_qubit(circuit1, qutrits1)
+#u_1i1 = eie()
+
+#circuit1.append((u_1i1(qutrits1[1]).controlled_by(qutrits1[0])))
+#decoding_qubit(circuit1, qutrits1)
+
+#circuit1.append([cirq.measure(qutrits1[0])])
 
 res1 = sim.simulate(circuit1)
-print(circuit1)
-print(res1)
+measured_bit = res1.measurements[str(qutrits1[5])][0]
+
+print(f'Measured bit: {measured_bit}')
+#print(circuit1)
+#print(res1)
 
 
 
