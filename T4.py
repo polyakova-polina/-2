@@ -370,6 +370,55 @@ def IXXXZ_r(cirquit, qudits, a1):
     cirquit.append([h(a1)], strategy=InsertStrategy.INLINE)
     cirquit.append([cirq.measure(a1)])
 
+def get_syndrome(circuit, qutrits):
+    q0 = qutrits1[0]
+    q1 = qutrits1[1]
+    q2 = qutrits1[2]
+    q3 = qutrits1[3]
+    q4 = qutrits1[4]
+
+
+
+    XZZXI(circuit1, [q0, q1, q2, q3, q4], qutrits1[5])
+    res1 = sim.simulate(circuit1)
+    measured_bit = res1.measurements[str(qutrits1[5])][0]
+    print(f'Measured bit: {measured_bit}')
+
+    ZZXIX(circuit1, [q0, q1, q2, q3, q4], qutrits1[5])
+    res1 = sim.simulate(circuit1)
+    measured_bit = res1.measurements[str(qutrits1[5])][0]
+    print(f'Measured bit: {measured_bit}')
+
+    XXIZX(circuit1, [q0, q1, q2, q3, q4], qutrits1[5])
+    res1 = sim.simulate(circuit1)
+    measured_bit = res1.measurements[str(qutrits1[5])][0]
+    print(f'Measured bit: {measured_bit}')
+
+    IXXXZ(circuit1, [q0, q1, q2, q3, q4], qutrits1[5])
+    res1 = sim.simulate(circuit1)
+    measured_bit = res1.measurements[str(qutrits1[5])][0]
+    print(f'Measured bit: {measured_bit}')
+
+    IXXXZ_r(circuit1, [q0, q1, q2, q3, q4], qutrits1[5])
+    res1 = sim.simulate(circuit1)
+    measured_bit = res1.measurements[str(qutrits1[5])][0]
+    print(f'Measured bit: {measured_bit}')
+
+    XXIZX_r(circuit1, [q0, q1, q2, q3, q4], qutrits1[5])
+    res1 = sim.simulate(circuit1)
+    measured_bit = res1.measurements[str(qutrits1[5])][0]
+    print(f'Measured bit: {measured_bit}')
+
+    ZZXIX_r(circuit1, [q0, q1, q2, q3, q4], qutrits1[5])
+    res1 = sim.simulate(circuit1)
+    measured_bit = res1.measurements[str(qutrits1[5])][0]
+    print(f'Measured bit: {measured_bit}')
+
+    XZZXI_r(circuit1, [q0, q1, q2, q3, q4], qutrits1[5])
+    res1 = sim.simulate(circuit1)
+    measured_bit = res1.measurements[str(qutrits1[5])][0]
+    print(f'Measured bit: {measured_bit}')
+
 x = X1()
 x2 = X2()
 z = Z1()
@@ -387,61 +436,15 @@ for i in range(10):
 
 gates1 = [h(qutrits1[0])]
 #circuit1.append(gates1)
-encoding_qubit(circuit1,qutrits1)
+encoding_qubit(circuit1, qutrits1)
 
-q0 = qutrits1[0]
-q1 = qutrits1[1]
-q2 = qutrits1[2]
-q3 = qutrits1[3]
-q4 = qutrits1[4]
+gates1 = [x(qutrits1[1])]
+circuit1.append(gates1)
 
-
-
-XZZXI(circuit1, [q1, q2, q3, q4, q0], qutrits1[5])
+get_syndrome(circuit1, qutrits1)
+decoding_qubit(circuit1, qutrits1)
 res1 = sim.simulate(circuit1)
-measured_bit = res1.measurements[str(qutrits1[5])][0]
-print(f'Measured bit: {measured_bit}')
-
-ZZXIX(circuit1, [q1, q2, q3, q4, q0], qutrits1[5])
-res1 = sim.simulate(circuit1)
-measured_bit = res1.measurements[str(qutrits1[5])][0]
-print(f'Measured bit: {measured_bit}')
-
-XXIZX(circuit1, [q1, q2, q3, q4, q0], qutrits1[5])
-res1 = sim.simulate(circuit1)
-measured_bit = res1.measurements[str(qutrits1[5])][0]
-print(f'Measured bit: {measured_bit}')
-
-IXXXZ(circuit1, [q1, q2, q3, q4, q0], qutrits1[5])
-res1 = sim.simulate(circuit1)
-measured_bit = res1.measurements[str(qutrits1[5])][0]
-print(f'Measured bit: {measured_bit}')
-
-
-IXXXZ_r(circuit1, [q1, q2, q3, q4, q0], qutrits1[5])
-res1 = sim.simulate(circuit1)
-measured_bit = res1.measurements[str(qutrits1[5])][0]
-print(f'Measured bit: {measured_bit}')
-
-XXIZX_r(circuit1, [q1, q2, q3, q4, q0], qutrits1[5])
-res1 = sim.simulate(circuit1)
-measured_bit = res1.measurements[str(qutrits1[5])][0]
-print(f'Measured bit: {measured_bit}')
-
-ZZXIX_r(circuit1, [q1, q2, q3, q4, q0], qutrits1[5])
-res1 = sim.simulate(circuit1)
-measured_bit = res1.measurements[str(qutrits1[5])][0]
-print(f'Measured bit: {measured_bit}')
-
-XZZXI_r(circuit1, [q1, q2, q3, q4, q0], qutrits1[5])
-res1 = sim.simulate(circuit1)
-measured_bit = res1.measurements[str(qutrits1[5])][0]
-print(f'Measured bit: {measured_bit}')
-
-
-#decoding_qubit(circuit1, qutrits1)
-res1 = sim.simulate(circuit1)
-#print(res1)
+print(res1)
 
 # print(circuit1)
 # print(res1)
