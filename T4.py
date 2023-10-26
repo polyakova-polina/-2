@@ -451,7 +451,7 @@ gates1 = [h(qutrits1[0])]
 #circuit1.append(gates1)
 encoding_qubit(circuit1, qutrits1)
 
-gates1 = [x(qutrits1[3])]
+gates1 = [z(qutrits1[2])]
 circuit1.append(gates1)
 
 get_syndrome(circuit1, qutrits1)
@@ -469,18 +469,44 @@ a4 = qutrits1[8]
 circuit1.append([x(a1), x(a3), x(a4)], strategy=InsertStrategy.INLINE)
 CCCCX(circuit1, a1, a2, a3, a4, q0)
 circuit1.append([x(a1), x(a3), x(a4)], strategy=InsertStrategy.INLINE)
+
 circuit1.append([x(a3), x(a4)], strategy=InsertStrategy.INLINE)
 CCCCX(circuit1, a1, a2, a3, a4, q1)
 circuit1.append([x(a3), x(a4)], strategy=InsertStrategy.INLINE)
+
 circuit1.append([x(a2), x(a3), x(a4)], strategy=InsertStrategy.INLINE)
 CCCCX(circuit1, a1, a2, a3, a4, q2)
 circuit1.append([x(a2), x(a3), x(a4)], strategy=InsertStrategy.INLINE)
+
 circuit1.append([x(a1), x(a2), x(a4)], strategy=InsertStrategy.INLINE)
 CCCCX(circuit1, a1, a2, a3, a4, q3)
 circuit1.append([x(a1), x(a2), x(a4)], strategy=InsertStrategy.INLINE)
+
 circuit1.append([x(a1), x(a2), x(a3)], strategy=InsertStrategy.INLINE)
 CCCCX(circuit1, a1, a2, a3, a4, q4)
 circuit1.append([x(a1), x(a2), x(a3)], strategy=InsertStrategy.INLINE)
+
+
+
+circuit1.append([x(a2), x(a4)], strategy=InsertStrategy.INLINE)
+CCCCZ(circuit1, a1, a2, a3, a4, q0)
+circuit1.append([x(a2), x(a4)], strategy=InsertStrategy.INLINE)
+
+circuit1.append([x(a1), x(a2)], strategy=InsertStrategy.INLINE)
+CCCCZ(circuit1, a1, a2, a3, a4, q1)
+circuit1.append([x(a1), x(a2)], strategy=InsertStrategy.INLINE)
+
+circuit1.append([x(a3), x(a1)], strategy=InsertStrategy.INLINE)
+CCCCZ(circuit1, a1, a2, a3, a4, q2)
+circuit1.append([x(a3), x(a1)], strategy=InsertStrategy.INLINE)
+
+circuit1.append([x(a2), x(a3)], strategy=InsertStrategy.INLINE)
+CCCCZ(circuit1, a1, a2, a3, a4, q3)
+circuit1.append([x(a2), x(a3)], strategy=InsertStrategy.INLINE)
+
+circuit1.append([x(a1), x(a4)], strategy=InsertStrategy.INLINE)
+CCCCZ(circuit1, a1, a2, a3, a4, q4)
+circuit1.append([x(a1), x(a4)], strategy=InsertStrategy.INLINE)
 
 decoding_qubit(circuit1, qutrits1)
 res1 = sim.simulate(circuit1)
