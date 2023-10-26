@@ -358,7 +358,7 @@ def XXIZX_r(cirquit, qudits, a1):
     CX(cirquit, a1, qudits[1])
     CX(cirquit, a1, qudits[0])
     cirquit.append([h(a1)], strategy=InsertStrategy.INLINE)
-    cirquit.append([cirq.measure(a1)])
+    #cirquit.append([cirq.measure(a1)])
 
 def IXXXZ_r(cirquit, qudits, a1):
     h = H()
@@ -376,6 +376,10 @@ def get_syndrome(circuit, qutrits):
     q2 = qutrits1[2]
     q3 = qutrits1[3]
     q4 = qutrits1[4]
+    a1 = qutrits1[5]
+    a2 = qutrits1[6]
+    a3 = qutrits1[7]
+    a4 = qutrits1[8]
 
 
 
@@ -384,40 +388,49 @@ def get_syndrome(circuit, qutrits):
     measured_bit = res1.measurements[str(qutrits1[5])][0]
     print(f'Measured bit: {measured_bit}')
 
-    ZZXIX(circuit1, [q0, q1, q2, q3, q4], qutrits1[5])
+    ZZXIX(circuit1, [q0, q1, q2, q3, q4], qutrits1[6])
     res1 = sim.simulate(circuit1)
-    measured_bit = res1.measurements[str(qutrits1[5])][0]
+    measured_bit = res1.measurements[str(qutrits1[6])][0]
     print(f'Measured bit: {measured_bit}')
 
-    XXIZX(circuit1, [q0, q1, q2, q3, q4], qutrits1[5])
+    XXIZX(circuit1, [q0, q1, q2, q3, q4], qutrits1[7])
     res1 = sim.simulate(circuit1)
-    measured_bit = res1.measurements[str(qutrits1[5])][0]
+    measured_bit = res1.measurements[str(qutrits1[7])][0]
     print(f'Measured bit: {measured_bit}')
 
-    IXXXZ(circuit1, [q0, q1, q2, q3, q4], qutrits1[5])
+    IXXXZ(circuit1, [q0, q1, q2, q3, q4], qutrits1[8])
     res1 = sim.simulate(circuit1)
-    measured_bit = res1.measurements[str(qutrits1[5])][0]
+    measured_bit = res1.measurements[str(qutrits1[8])][0]
     print(f'Measured bit: {measured_bit}')
+    '''
+    IXXXZ(circuit1, [q0, q1, q2, q3, q4], qutrits1[8])
+    XXIZX(circuit1, [q0, q1, q2, q3, q4], qutrits1[7])
+    ZZXIX(circuit1, [q0, q1, q2, q3, q4], qutrits1[6])
+    XZZXI(circuit1, [q0, q1, q2, q3, q4], qutrits1[5])
+    '''
 
-    IXXXZ_r(circuit1, [q0, q1, q2, q3, q4], qutrits1[5])
-    res1 = sim.simulate(circuit1)
-    measured_bit = res1.measurements[str(qutrits1[5])][0]
-    print(f'Measured bit: {measured_bit}')
+def CCCCX(cirquit, q1, q2, q3, q4, q5):
+    U1(cirquit, q1, q2)
+    U1(cirquit, q2, q3)
+    U1(cirquit, q3, q4)
+    CX(cirquit, q4, q5)
+    U1_c(cirquit, q3, q4)
+    U1_c(cirquit, q2, q3)
+    U1_c(cirquit, q1, q2)
 
-    XXIZX_r(circuit1, [q0, q1, q2, q3, q4], qutrits1[5])
-    res1 = sim.simulate(circuit1)
-    measured_bit = res1.measurements[str(qutrits1[5])][0]
-    print(f'Measured bit: {measured_bit}')
 
-    ZZXIX_r(circuit1, [q0, q1, q2, q3, q4], qutrits1[5])
-    res1 = sim.simulate(circuit1)
-    measured_bit = res1.measurements[str(qutrits1[5])][0]
-    print(f'Measured bit: {measured_bit}')
+def CCCCZ(cirquit, q1, q2, q3, q4, q5):
+    h = H()
+    cirquit.append(h(q5), strategy=InsertStrategy.INLINE)
+    CCCCX(cirquit, q1, q2, q3, q4, q5)
+    cirquit.append(h(q5), strategy=InsertStrategy.INLINE)
 
-    XZZXI_r(circuit1, [q0, q1, q2, q3, q4], qutrits1[5])
-    res1 = sim.simulate(circuit1)
-    measured_bit = res1.measurements[str(qutrits1[5])][0]
-    print(f'Measured bit: {measured_bit}')
+def CCCCY(cirquit, q1, q2, q3, q4, q5):
+    h = H()
+    cirquit.append(z(q5), strategy=InsertStrategy.INLINE)
+    CCCCX(cirquit, q1, q2, q3, q4, q5)
+    cirquit.append(z(q5), strategy=InsertStrategy.INLINE)
+
 
 x = X1()
 x2 = X2()
@@ -438,10 +451,37 @@ gates1 = [h(qutrits1[0])]
 #circuit1.append(gates1)
 encoding_qubit(circuit1, qutrits1)
 
-gates1 = [x(qutrits1[1])]
+gates1 = [x(qutrits1[3])]
 circuit1.append(gates1)
 
 get_syndrome(circuit1, qutrits1)
+
+q0 = qutrits1[0]
+q1 = qutrits1[1]
+q2 = qutrits1[2]
+q3 = qutrits1[3]
+q4 = qutrits1[4]
+a1 = qutrits1[5]
+a2 = qutrits1[6]
+a3 = qutrits1[7]
+a4 = qutrits1[8]
+
+circuit1.append([x(a1), x(a3), x(a4)], strategy=InsertStrategy.INLINE)
+CCCCX(circuit1, a1, a2, a3, a4, q0)
+circuit1.append([x(a1), x(a3), x(a4)], strategy=InsertStrategy.INLINE)
+circuit1.append([x(a3), x(a4)], strategy=InsertStrategy.INLINE)
+CCCCX(circuit1, a1, a2, a3, a4, q1)
+circuit1.append([x(a3), x(a4)], strategy=InsertStrategy.INLINE)
+circuit1.append([x(a2), x(a3), x(a4)], strategy=InsertStrategy.INLINE)
+CCCCX(circuit1, a1, a2, a3, a4, q2)
+circuit1.append([x(a2), x(a3), x(a4)], strategy=InsertStrategy.INLINE)
+circuit1.append([x(a1), x(a2), x(a4)], strategy=InsertStrategy.INLINE)
+CCCCX(circuit1, a1, a2, a3, a4, q3)
+circuit1.append([x(a1), x(a2), x(a4)], strategy=InsertStrategy.INLINE)
+circuit1.append([x(a1), x(a2), x(a3)], strategy=InsertStrategy.INLINE)
+CCCCX(circuit1, a1, a2, a3, a4, q4)
+circuit1.append([x(a1), x(a2), x(a3)], strategy=InsertStrategy.INLINE)
+
 decoding_qubit(circuit1, qutrits1)
 res1 = sim.simulate(circuit1)
 print(res1)

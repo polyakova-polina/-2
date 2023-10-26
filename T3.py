@@ -771,21 +771,64 @@ gates1 = [h(qutrits1[0])]
 #gates1 = [cx(qutrits1[0], qutrits1[1])]
 #circuit1.append(cx.on(qutrits1[0], qutrits1[1]))
 encoding_qubit(circuit1, qutrits1)
-gates1 = [z(qutrits1[3])]
+
+gates1 = [x(qutrits1[3])]
 circuit1.append(gates1)
+
 gates1 = [x(qutrits1[5])]
 #circuit1.append(gates1)
 
 
+q1 = qutrits1[0]
+q2 = qutrits1[1]
+q3 = qutrits1[2]
+q4 = qutrits1[3]
+q5 = qutrits1[4]
 
-
-ZXXZI(circuit1, qutrits1, qutrits1[5])\
-
+ZXXZI(circuit1, [q1, q2, q3, q4, q5], qutrits1[5])
 res1 = sim.simulate(circuit1)
 measured_bit = res1.measurements[str(qutrits1[5])][0]
 print(f'Measured bit: {measured_bit}')
 
-ZXXZI_r(circuit1, qutrits1, qutrits1[5])
+ZXXZI(circuit1, [q2, q3, q4, q5, q1], qutrits1[5])
+res1 = sim.simulate(circuit1)
+measured_bit = res1.measurements[str(qutrits1[5])][0]
+print(f'Measured bit: {measured_bit}')
+
+ZXXZI(circuit1, [q3, q4, q5, q1, q2], qutrits1[5])
+res1 = sim.simulate(circuit1)
+measured_bit = res1.measurements[str(qutrits1[5])][0]
+print(f'Measured bit: {measured_bit}')
+
+ZXXZI(circuit1, [q4, q5, q1, q2, q3], qutrits1[5])
+res1 = sim.simulate(circuit1)
+measured_bit = res1.measurements[str(qutrits1[5])][0]
+print(f'Measured bit: {measured_bit}')
+
+
+
+ZXXZI_r(circuit1, [q1, q2, q3, q4, q5], qutrits1[5])
+res1 = sim.simulate(circuit1)
+measured_bit = res1.measurements[str(qutrits1[5])][0]
+print(f'Measured bit: {measured_bit}')
+
+ZXXZI_r(circuit1, [q2, q3, q4, q5, q1], qutrits1[5])
+res1 = sim.simulate(circuit1)
+measured_bit = res1.measurements[str(qutrits1[5])][0]
+print(f'Measured bit: {measured_bit}')
+
+ZXXZI_r(circuit1, [q3, q4, q5, q1, q2], qutrits1[5])
+res1 = sim.simulate(circuit1)
+measured_bit = res1.measurements[str(qutrits1[5])][0]
+print(f'Measured bit: {measured_bit}')
+
+ZXXZI_r(circuit1, [q4, q5, q1, q2, q3], qutrits1[5])
+res1 = sim.simulate(circuit1)
+measured_bit = res1.measurements[str(qutrits1[5])][0]
+print(f'Measured bit: {measured_bit}')
+
+
+
 
 
 
@@ -801,10 +844,7 @@ ZXXZI_r(circuit1, qutrits1, qutrits1[5])
 
 #circuit1.append([cirq.measure(qutrits1[0])])
 
-res1 = sim.simulate(circuit1)
-measured_bit = res1.measurements[str(qutrits1[5])][0]
 
-print(f'Measured bit: {measured_bit}')
 #print(circuit1)
 #print(res1)
 

@@ -23,7 +23,7 @@ S1 = m(X,Z,Z,X,I)
 S2 = m(I,X,Z,Z,X)
 S3 = m(X,I,X,Z,Z)
 S4 = m(Z,X,I,X,Z)
-psi =
+psi =zl
 
 hl = m(I,I,I,I,I)
 
@@ -43,4 +43,5 @@ bra_pe = np.conj(psi_er)
 #print(np.matmul(np.matmul(bra_pe, S3), psi_er))
 #print(np.matmul(np.matmul(bra_pe, S4), psi_er))
 #print(zl)
-print(hl @ psi - (zl + el) / 2**0.5)
+#print(hl @ psi - (zl + el) / 2**0.5)
+print(zl)
