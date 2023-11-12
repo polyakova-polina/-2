@@ -8,9 +8,9 @@ from scipy import linalg
 from cirq import protocols
 from cirq.testing import gate_features
 import random
-N = 1000
-PMS1 = 1
-PMS2 = 1
+N = 10000
+PMS1 = 0.99
+PMS2 = 0.89
 PMS = PMS2
 
 def adde(circuit, gate, qud, ind):
@@ -156,6 +156,19 @@ def U1(cirquit, q1, q2):
     #error(cirquit, [q1, q2], PMS)
     adde(cirquit, [xx], [q1, q2], 2)
 
+def U1_clear(cirquit, q1, q2):
+    u1 = U(R(0, -np.pi, 1, 2), 'Rx(-π)12')
+    u2 = U(R(np.pi / 2, np.pi / 2, 0, 1), 'Ry(π/2)01')
+    u6 = U(R(np.pi / 2, -np.pi, 0, 2), 'Ry(-π)02')
+    cirquit.append([u1(q1), u6(q2)], strategy=InsertStrategy.INLINE)
+    #adde(cirquit, [u1, u6], [q1, q2], 1)
+    cirquit.append([u2(q1)], strategy=InsertStrategy.INLINE)
+    #adde(cirquit, [u2], [q1], 1)
+    xx = TwoQuditMSGate3()
+    cirquit.append([xx(q1, q2)], strategy=InsertStrategy.INLINE)
+    #error(cirquit, [q1, q2], PMS)
+    #adde(cirquit, [xx], [q1, q2], 2)
+
 
 
 def U1_c(cirquit, q1, q2):
@@ -171,6 +184,39 @@ def U1_c(cirquit, q1, q2):
     adde(cirquit, [u1, u6], [q1, q2], 1)
     #cirquit.append([u1(q1), u6(q2)], strategy=InsertStrategy.INLINE)
 
+def U1_c_clear(cirquit, q1, q2):
+    u1 = U(R(0, np.pi, 1, 2), 'Rx(π)12')
+    u2 = U(R(np.pi / 2, -np.pi / 2, 0, 1), 'Ry(-π/2)01')
+    u6 = U(R(np.pi / 2, np.pi, 0, 2), 'Ry(π)02')
+    xx_c = TwoQuditMSGate3_c()
+    cirquit.append([xx_c(q1, q2)], strategy=InsertStrategy.INLINE)
+    #adde(cirquit, [xx_c], [q1, q2], 2)
+    #error(cirquit, [q1, q2], PMS)
+    #adde(cirquit, [u2], [q1], 1)
+    cirquit.append([u2(q1)], strategy=InsertStrategy.INLINE)
+    #adde(cirquit, [u1, u6], [q1, q2], 1)
+    cirquit.append([u1(q1), u6(q2)], strategy=InsertStrategy.INLINE)
+
+def CX_clear(cirquit, q1, q2):
+    u1 = U(R(0, -np.pi, 1, 2), 'Rx(-π)12')
+    u2 = U(R(np.pi / 2, np.pi / 2, 0, 1), 'Ry(π/2)01')
+    u3 = U(R(0, -np.pi, 0, 1), 'Rx(-π)01')
+    u4 = U(R(np.pi / 2, -np.pi / 2, 0, 1), 'Ry(-π/2)01')
+    u5 = U(R(0, np.pi, 1, 2), 'Rx(π)12')
+    #adde(cirquit, [u1], [q1], 1)
+    #adde(cirquit, [u2], [q1], 1)
+    cirquit.append([u1(q1)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u2(q1)], strategy=InsertStrategy.INLINE)
+    xx = TwoQuditMSGate3()
+    #adde(cirquit, [xx], [q1, q2], 2)
+    cirquit.append([xx(q1, q2)], strategy=InsertStrategy.INLINE)
+    #error(cirquit, [q1, q2], 2)
+    #adde(cirquit, [u3, u3], [q1, q2], 1)
+    #adde(cirquit, [u4], [q1], 1)
+    #adde(cirquit, [u5], [q1], 1)
+    cirquit.append([u3(q1), u3(q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u4(q1)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u5(q1)], strategy=InsertStrategy.INLINE)
 
 
 def CX(cirquit, q1, q2):
@@ -295,7 +341,11 @@ class X1(cirq.Gate):
         return R(0, np.pi, 0, 1)
 
     def _circuit_diagram_info_(self, args):
+
         return 'X1'
+
+
+
 
 
 def encoding_qubit(circuit, log_qubit):
@@ -485,13 +535,13 @@ def get_syndrome_r(circuit, qutrits):
     print(f'Measured bit: {measured_bit}')
 
 def CCCCX(cirquit, q1, q2, q3, q4, q5):
-    U1(cirquit, q1, q2)
-    U1(cirquit, q2, q3)
-    U1(cirquit, q3, q4)
-    CX(cirquit, q4, q5)
-    U1_c(cirquit, q3, q4)
-    U1_c(cirquit, q2, q3)
-    U1_c(cirquit, q1, q2)
+    U1_clear(cirquit, q1, q2)
+    U1_clear(cirquit, q2, q3)
+    U1_clear(cirquit, q3, q4)
+    CX_clear(cirquit, q4, q5)
+    U1_c_clear(cirquit, q3, q4)
+    U1_c_clear(cirquit, q2, q3)
+    U1_c_clear(cirquit, q1, q2)
 
 def CCCCZ(cirquit, q1, q2, q3, q4, q5):
     h = H()
@@ -505,7 +555,7 @@ def CCCCY(cirquit, q1, q2, q3, q4, q5):
     CCCCX(cirquit, q1, q2, q3, q4, q5)
 
 def error_correction(circuit, qutrits):
-    get_syndrome(circuit, qutrits)
+    #get_syndrome(circuit, qutrits)
     # get_syndrome_r(circuit1, qutrits1)
 
 
@@ -514,72 +564,77 @@ def error_correction(circuit, qutrits):
     q2 = qutrits1[2]
     q3 = qutrits1[3]
     q4 = qutrits1[4]
-    a1 = qutrits1[5]
-    a2 = qutrits1[6]
-    a3 = qutrits1[7]
-    a4 = qutrits1[8]
+
 
     # Операции для исправления ошибок X
-    circuit1.append([x(a1), x(a3), x(a4)], strategy=InsertStrategy.INLINE)
-    CCCCX(circuit, a1, a2, a3, a4, q0)
-    circuit1.append([x(a1), x(a3), x(a4)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x(q1)], strategy=InsertStrategy.INLINE)
+    CCCCX(circuit, q1, q2, q3, q4, q0)
+    circuit1.append([x(q1)], strategy=InsertStrategy.INLINE)
 
-    circuit1.append([x(a3), x(a4)], strategy=InsertStrategy.INLINE)
-    CCCCX(circuit, a1, a2, a3, a4, q1)
-    circuit1.append([x(a3), x(a4)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x(q1), x(q4)], strategy=InsertStrategy.INLINE)
+    CCCCX(circuit, q1, q2, q3, q4, q0)
+    circuit1.append([x(q1), x(q4)], strategy=InsertStrategy.INLINE)
 
-    circuit1.append([x(a2), x(a3), x(a4)], strategy=InsertStrategy.INLINE)
-    CCCCX(circuit, a1, a2, a3, a4, q2)
-    circuit1.append([x(a2), x(a3), x(a4)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x(q1), x(q2), x(q3)], strategy=InsertStrategy.INLINE)
+    CCCCZ(circuit, q1, q2, q3, q4, q0)
+    circuit1.append([x(q1), x(q2), x(q3)], strategy=InsertStrategy.INLINE)
 
-    circuit1.append([x(a1), x(a2), x(a4)], strategy=InsertStrategy.INLINE)
-    CCCCX(circuit, a1, a2, a3, a4, q3)
-    circuit1.append([x(a1), x(a2), x(a4)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x(q2)], strategy=InsertStrategy.INLINE)
+    CCCCX(circuit, q1, q2, q3, q4, q0)
+    circuit1.append([x(q2)], strategy=InsertStrategy.INLINE)
 
-    circuit1.append([x(a1), x(a2), x(a3)], strategy=InsertStrategy.INLINE)
-    CCCCX(circuit, a1, a2, a3, a4, q4)
-    circuit1.append([x(a1), x(a2), x(a3)], strategy=InsertStrategy.INLINE)
-
-
-    # Операции для исправления ошибок Z
-    circuit1.append([x(a2), x(a4)], strategy=InsertStrategy.INLINE)
-    CCCCZ(circuit, a1, a2, a3, a4, q0)
-    circuit1.append([x(a2), x(a4)], strategy=InsertStrategy.INLINE)
-
-    circuit1.append([x(a1), x(a2)], strategy=InsertStrategy.INLINE)
-    CCCCZ(circuit, a1, a2, a3, a4, q1)
-    circuit1.append([x(a1), x(a2)], strategy=InsertStrategy.INLINE)
-
-    circuit1.append([x(a3), x(a1)], strategy=InsertStrategy.INLINE)
-    CCCCZ(circuit, a1, a2, a3, a4, q2)
-    circuit1.append([x(a3), x(a1)], strategy=InsertStrategy.INLINE)
-
-    circuit1.append([x(a2), x(a3)], strategy=InsertStrategy.INLINE)
-    CCCCZ(circuit, a1, a2, a3, a4, q3)
-    circuit1.append([x(a2), x(a3)], strategy=InsertStrategy.INLINE)
-
-    circuit1.append([x(a1), x(a4)], strategy=InsertStrategy.INLINE)
-    CCCCZ(circuit, a1, a2, a3, a4, q4)
-    circuit1.append([x(a1), x(a4)], strategy=InsertStrategy.INLINE)
 
     # Операции для исправления ошибок Y
-    circuit1.append([x(a4)], strategy=InsertStrategy.INLINE)
-    CCCCY(circuit, a1, a2, a3, a4, q0)
-    circuit1.append([x(a4)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x(q3)], strategy=InsertStrategy.INLINE)
+    CCCCY(circuit, q1, q2, q3, q4, q0)
+    circuit1.append([x(q3)], strategy=InsertStrategy.INLINE)
 
-    CCCCY(circuit, a1, a2, a3, a4, q1)
+    circuit1.append([x(q4)], strategy=InsertStrategy.INLINE)
+    CCCCX(circuit, q1, q2, q3, q4, q0)
+    circuit1.append([x(q4)], strategy=InsertStrategy.INLINE)
 
-    circuit1.append([x(a3)], strategy=InsertStrategy.INLINE)
-    CCCCY(circuit, a1, a2, a3, a4, q2)
-    circuit1.append([x(a3)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x(q1), x(q3)], strategy=InsertStrategy.INLINE)
+    CCCCZ(circuit, q1, q2, q3, q4, q0)
+    circuit1.append([x(q1), x(q3)], strategy=InsertStrategy.INLINE)
 
-    circuit1.append([x(a2)], strategy=InsertStrategy.INLINE)
-    CCCCY(circuit, a1, a2, a3, a4, q3)
-    circuit1.append([x(a2)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x(q2), x(q3)], strategy=InsertStrategy.INLINE)
+    CCCCX(circuit, q1, q2, q3, q4, q0)
+    circuit1.append([x(q2), x(q3)], strategy=InsertStrategy.INLINE)
 
-    circuit1.append([x(a1)], strategy=InsertStrategy.INLINE)
-    CCCCY(circuit, a1, a2, a3, a4, q4)
-    circuit1.append([x(a1)], strategy=InsertStrategy.INLINE)
+    CCCCZ(circuit, q1, q2, q3, q4, q0)
+
+    # Операции для исправления ошибок Z
+    circuit1.append([x(q2), x(q4)], strategy=InsertStrategy.INLINE)
+    CCCCZ(circuit, q1, q2, q3, q4, q0)
+    circuit1.append([x(q2), x(q4)], strategy=InsertStrategy.INLINE)
+
+
+    circuit1.append([x(q3), x(q4)], strategy=InsertStrategy.INLINE)
+    CCCCZ(circuit, q1, q2, q3, q4, q0)
+    circuit1.append([x(q3), x(q4)], strategy=InsertStrategy.INLINE)
+
+def time_error(circuit, qutrits, t):
+
+    x = X1()
+    y = Y1()
+    z = Z1()
+
+    p = t/(t+5)
+
+    rvv = random.randint(0, 10000)
+    n = len(qutrits)
+    if rvv > p * 10000:
+        return
+    else:
+        for i in range(1):
+            rv = random.randint(0 ,2)
+            if rv == 1:
+                circuit.append(x(qutrits[random.randint(0 ,3)]), strategy=InsertStrategy.INLINE)
+            if rv == 2:
+                circuit.append(y(qutrits[random.randint(0 ,3)]), strategy=InsertStrategy.INLINE)
+            if rv == 0:
+                circuit.append(z(qutrits[random.randint(0 ,3)]), strategy=InsertStrategy.INLINE)
+
 
 def error(circuit, qutrits, ind):
     if ind == 1:
@@ -600,7 +655,7 @@ def error(circuit, qutrits, ind):
                 circuit.append(x(qutrits[i]), strategy=InsertStrategy.INLINE)
             if rv == 2:
                 circuit.append(y(qutrits[i]), strategy=InsertStrategy.INLINE)
-            if rv == 3:
+            if rv == 0:
                 circuit.append(z(qutrits[i]), strategy=InsertStrategy.INLINE)
 
 def X1_l(circuit, lqubits):
@@ -637,7 +692,7 @@ y = Y1()
 x_conj = X1_conj()
 x2_conj = X2_conj()
 h = H()
-
+'''
 sim = cirq.Simulator()
 circuit1 = cirq.Circuit()
 qutrits1 = []
@@ -646,7 +701,7 @@ qutrits1 = []
 
 for i in range(10):
     qutrits1.append(cirq.LineQid(i, dimension=3))
-
+'''
 # кодируемое состояние
 #gates1 = [h(qutrits1[0])]
 #circuit1.append(gates1)
@@ -681,27 +736,59 @@ print(f'Measured bit: {measured_bit}')
 '''
 def m(a ,b, c, d, e):
     return np.kron(np.kron(np.kron(np.kron(a, b), c), d), e)
-
+sps1 = []
+sps2 = []
 e = np.array([0 ,1 ,0])
 z = np.array([1 ,0 ,0])
 sch = 0
 for i in range(N):
+    x = X1()
+    y = Y1()
     sim = cirq.Simulator()
     circuit1 = cirq.Circuit()
     qutrits1 = []
-    for j in range(10):
+    for j in range(5):
         qutrits1.append(cirq.LineQid(j, dimension=3))
     encoding_qubit(circuit1, qutrits1)
+    #time_error(circuit1, qutrits1, 100)
+    #circuit1.append([y(qutrits1[2])])
     decoding_qubit(circuit1, qutrits1)
+    '''
+    res1 = sim.simulate(circuit1)
+    print('88888888')
+    print('res1', res1)
+    print('88888888')
+    '''
+    error_correction(circuit1, qutrits1)
     res1 = sim.simulate(circuit1)
     # print(np.dot(res1.final_state_vector + m(z,z,z,z,z), res1.final_state_vector + m(z,z,z,z,z)))
-    if i == 0:
-        print(res1)
-    if np.dot(res1.final_state_vector + m(z ,z ,z ,z ,z), res1.final_state_vector + m(z ,z ,z ,z ,z)) < 0.001:
-        sch += 1
-print('res', sch / N)
 
+    vec = circuit1.final_state_vector(initial_state=0, qubit_order=qutrits1)
+    ssum = 0
+    for o in range(80, 3**5):
+        if abs(vec[o]) > 0.0001:
+            ssum += 1
+    if ssum == 0:
+        sch += 1
+    if i == 0:
+        #print(vec)
+        print('999999')
+        print('res1', res1)
+        print('999999')
+        print('sum0', ssum)
+        #print(circuit1)
+    if i % 10 == 0:
+        sps1.append(sch / (i + 1))
+        sps2.append(i)
+
+print('FID', sch / N)
+
+
+fig = plt.figure(figsize=(7, 4))
+ax = fig.add_subplot()
+ax.scatter(sps2, sps1, color='b', s = 5)
+plt.show()
 # print(res1.final_state_vector)
-res1 = sim.simulate(circuit1)
-print(circuit1)
-print(res1)
+#res1 = sim.simulate(circuit1)
+#print(circuit1)
+#print(res1)
