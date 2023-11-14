@@ -8,9 +8,9 @@ from scipy import linalg
 from cirq import protocols
 from cirq.testing import gate_features
 import random
-N = 10000
-PMS1 = 0.99
-PMS2 = 0.89
+N = 10
+PMS1 = 1
+PMS2 = 1
 PMS = PMS2
 
 def adde(circuit, gate, qud, ind):
@@ -621,19 +621,20 @@ def time_error(circuit, qutrits, t):
 
     p = t/(t+5)
 
-    rvv = random.randint(0, 10000)
     n = len(qutrits)
-    if rvv > p * 10000:
-        return
-    else:
-        for i in range(1):
+    for i in range(n):
+        rvv = random.randint(0, 10000)
+        if rvv > p * 10000:
+            return
+        else:
+
             rv = random.randint(0 ,2)
             if rv == 1:
-                circuit.append(x(qutrits[random.randint(0 ,3)]), strategy=InsertStrategy.INLINE)
+                circuit.append([x(qutrits[i])], strategy=InsertStrategy.INLINE)
             if rv == 2:
-                circuit.append(y(qutrits[random.randint(0 ,3)]), strategy=InsertStrategy.INLINE)
+                circuit.append([y(qutrits[i])], strategy=InsertStrategy.INLINE)
             if rv == 0:
-                circuit.append(z(qutrits[random.randint(0 ,3)]), strategy=InsertStrategy.INLINE)
+                circuit.append([z(qutrits[i])], strategy=InsertStrategy.INLINE)
 
 
 def error(circuit, qutrits, ind):
@@ -736,57 +737,51 @@ print(f'Measured bit: {measured_bit}')
 '''
 def m(a ,b, c, d, e):
     return np.kron(np.kron(np.kron(np.kron(a, b), c), d), e)
+
 sps1 = []
 sps2 = []
-e = np.array([0 ,1 ,0])
-z = np.array([1 ,0 ,0])
-sch = 0
-for i in range(N):
-    x = X1()
-    y = Y1()
-    sim = cirq.Simulator()
-    circuit1 = cirq.Circuit()
-    qutrits1 = []
-    for j in range(5):
-        qutrits1.append(cirq.LineQid(j, dimension=3))
-    encoding_qubit(circuit1, qutrits1)
-    #time_error(circuit1, qutrits1, 100)
-    #circuit1.append([y(qutrits1[2])])
-    decoding_qubit(circuit1, qutrits1)
-    '''
-    res1 = sim.simulate(circuit1)
-    print('88888888')
-    print('res1', res1)
-    print('88888888')
-    '''
-    error_correction(circuit1, qutrits1)
-    res1 = sim.simulate(circuit1)
-    # print(np.dot(res1.final_state_vector + m(z,z,z,z,z), res1.final_state_vector + m(z,z,z,z,z)))
-
-    vec = circuit1.final_state_vector(initial_state=0, qubit_order=qutrits1)
-    ssum = 0
-    for o in range(80, 3**5):
-        if abs(vec[o]) > 0.0001:
-            ssum += 1
-    if ssum == 0:
-        sch += 1
-    if i == 0:
-        #print(vec)
-        print('999999')
+for t in range(0, 50, 5):
+    sps1.append(t)
+    sch = 0
+    for i in range(N):
+        x = X1()
+        y = Y1()
+        sim = cirq.Simulator()
+        circuit1 = cirq.Circuit()
+        qutrits1 = []
+        for j in range(5):
+            qutrits1.append(cirq.LineQid(j, dimension=3))
+        encoding_qubit(circuit1, qutrits1)
+        time_error(circuit1, qutrits1, t)
+        #circuit1.append([y(qutrits1[2])])
+        decoding_qubit(circuit1, qutrits1)
+        '''
+        res1 = sim.simulate(circuit1)
+        print('88888888')
         print('res1', res1)
-        print('999999')
-        print('sum0', ssum)
-        #print(circuit1)
-    if i % 10 == 0:
-        sps1.append(sch / (i + 1))
-        sps2.append(i)
+        print('88888888')
+        '''
+        error_correction(circuit1, qutrits1)
+        res1 = sim.simulate(circuit1)
+        # print(np.dot(res1.final_state_vector + m(z,z,z,z,z), res1.final_state_vector + m(z,z,z,z,z)))
 
-print('FID', sch / N)
+        vec = circuit1.final_state_vector(initial_state=0, qubit_order=qutrits1)
+        ssum = 0
+        for o in range(80, 3**5):
+            if abs(vec[o]) > 0.0001:
+                ssum += 1
+        if ssum == 0:
+            sch += 1
+
+
+    sps2.append(sch / N)
 
 
 fig = plt.figure(figsize=(7, 4))
 ax = fig.add_subplot()
-ax.scatter(sps2, sps1, color='b', s = 5)
+ax.scatter(sps1, sps2, color='b', s = 5)
+print(sps1)
+print(sps2)
 plt.show()
 # print(res1.final_state_vector)
 #res1 = sim.simulate(circuit1)
