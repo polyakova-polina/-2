@@ -8,10 +8,11 @@ from scipy import linalg
 from cirq import protocols
 from cirq.testing import gate_features
 import random
-N = 100
-PMS1 = 1
+N = 1000
+PMS1 = 0.99
 PMS2 = 1
 PMS = PMS2
+T0 = 25
 
 def adde(circuit, gate, qud, ind):
     if ind == 1:
@@ -619,7 +620,7 @@ def time_error(circuit, qutrits, t):
     y = Y1()
     z = Z1()
 
-    p = t/(t+5)
+    p = 1 - np.exp(-t / T0)
 
     n = len(qutrits)
     for i in range(n):
@@ -740,11 +741,11 @@ def m(a ,b, c, d, e):
 
 sps1 = []
 sps2 = []
-for PMS2 in np.arange(0.5, 1, 0.05):
+for PMS2 in np.arange(0.9, 1.01, 0.01):
     print(sps1)
     sps1 = []
 
-    for t in range(0,50,2):
+    for t in range(0,100,8):
         #sps1.append(PMS2)
         sch = 0
         for i in range(N):
