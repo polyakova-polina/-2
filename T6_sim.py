@@ -8,10 +8,10 @@ from scipy import linalg
 from cirq import protocols
 from cirq.testing import gate_features
 import random
-N = 1000
+N = 10
 PMS1 = 0.99
-PMS2 = 1
-PMS = PMS2
+
+
 T0 = 25
 
 def adde(circuit, gate, qud, ind):
@@ -345,10 +345,6 @@ class X1(cirq.Gate):
 
         return 'X1'
 
-
-
-
-
 def encoding_qubit(circuit, log_qubit):
     x = X1()
     h = H()
@@ -393,7 +389,6 @@ def decoding_qubit(circuit, log_qubit):
     adde(circuit, [h,h,h], [q2, q3, q4], 1)
     #circuit.append(gates, strategy=InsertStrategy.INLINE)
 
-
 def XZZXI(cirquit, qudits, a1):
     h = H()
     cirquit.append([h(a1)], strategy=InsertStrategy.INLINE)
@@ -433,7 +428,6 @@ def IXXXZ(cirquit, qudits, a1):
     CZ(cirquit, a1, qudits[4])
     cirquit.append([h(a1)], strategy=InsertStrategy.INLINE)
     cirquit.append([cirq.measure(a1)])
-
 
 def XZZXI_r(cirquit, qudits, a1):
     h = H()
@@ -616,26 +610,21 @@ def error_correction(circuit, qutrits):
 
 def time_error(circuit, qutrits, t):
 
-    x = X1()
-    y = Y1()
-    z = Z1()
-
     p = 1 - np.exp(-t / T0)
 
-    n = len(qutrits)
-    for i in range(n):
-        rvv = random.randint(0, 10000)
-        if rvv > p * 10000:
-            return
-        else:
+    for q in qutrits:
+        a2 = random.randint(0, 1000)
+        a3 = random.randint(0, 1000)
+        a4 = random.randint(0, 1000)
+        sss = (a2 + a3 + a4) / (1 - p)
 
-            rv = random.randint(0 ,2)
-            if rv == 1:
-                circuit.append([x(qutrits[i])], strategy=InsertStrategy.INLINE)
-            if rv == 2:
-                circuit.append([y(qutrits[i])], strategy=InsertStrategy.INLINE)
-            if rv == 0:
-                circuit.append([z(qutrits[i])], strategy=InsertStrategy.INLINE)
+        mx = R(0, np.pi, 0, 1)
+        my = R(np.pi / 2, np.pi, 0, 1)
+        mz = R(0, np.pi, 0, 1) @ R(np.pi / 2, np.pi, 0, 1)
+        mi = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+        mat = p * mi + (a2 * mx + a3 * my + a4 * mz) / sss
+        er_gate = U(mat)
+        circuit.append(er_gate(q), strategy=InsertStrategy.INLINE)
 
 
 def error(circuit, qutrits, ind):
@@ -643,22 +632,21 @@ def error(circuit, qutrits, ind):
         p = PMS1
     else:
         p = PMS2
-    x = X1()
-    y = Y1()
-    z = Z1()
-    rv = random.randint(0, 10000)
-    n = len(qutrits)
-    if rv < p * 10000:
-        return
-    else:
-        for i in range(n):
-            rv = random.randint(0 ,3)
-            if rv == 1:
-                circuit.append(x(qutrits[i]), strategy=InsertStrategy.INLINE)
-            if rv == 2:
-                circuit.append(y(qutrits[i]), strategy=InsertStrategy.INLINE)
-            if rv == 0:
-                circuit.append(z(qutrits[i]), strategy=InsertStrategy.INLINE)
+
+    for q in qutrits:
+        a2 = random.randint(0, 1000)
+        a3 = random.randint(0, 1000)
+        a4 = random.randint(0, 1000)
+        sss = (a2 + a3 + a4) / (1 - p)
+
+        mx = R(0, np.pi, 0, 1)
+        my = R(np.pi / 2, np.pi, 0, 1)
+        mz = R(0, np.pi, 0, 1) @ R(np.pi / 2, np.pi, 0, 1)
+        mi = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+        mat = p * mi + (a2 * mx + a3 * my + a4 * mz) / sss
+        er_gate = U(mat)
+        circuit.append(er_gate(q), strategy=InsertStrategy.INLINE)
+
 
 def X1_l(circuit, lqubits):
     x = X1()
@@ -733,7 +721,7 @@ res1 = sim.simulate(circuit1)
 measured_bit = res1.measurements[str(qutrits1[3])][0]
 print(f'Measured bit: {measured_bit}')
 res1 = sim.simulate(circuit1)
-measured_bit = res1.measurements[str(qutrits1[4])][0]
+measured_bit = res1.measurements[str(qutirts1[4])][0]
 print(f'Measured bit: {measured_bit}')
 '''
 def m(a ,b, c, d, e):
@@ -741,11 +729,11 @@ def m(a ,b, c, d, e):
 
 sps1 = []
 sps2 = []
-for PMS2 in np.arange(0.9, 1.01, 0.01):
+for PMS2 in np.arange(0.49, 0.5, 0.01):
     print(sps1)
     sps1 = []
 
-    for t in range(0,100,8):
+    for t in range(0,2,2):
         #sps1.append(PMS2)
         sch = 0
         for i in range(N):
@@ -757,7 +745,7 @@ for PMS2 in np.arange(0.9, 1.01, 0.01):
             for j in range(5):
                 qutrits1.append(cirq.LineQid(j, dimension=3))
             encoding_qubit(circuit1, qutrits1)
-            time_error(circuit1, qutrits1, t)
+            #time_error(circuit1, qutrits1, t)
             #circuit1.append([y(qutrits1[2])])
             decoding_qubit(circuit1, qutrits1)
             '''
@@ -773,7 +761,7 @@ for PMS2 in np.arange(0.9, 1.01, 0.01):
             vec = circuit1.final_state_vector(initial_state=0, qubit_order=qutrits1)
             ssum = 0
             for o in range(80, 3**5):
-                if abs(vec[o]) > 0.0001:
+                if abs(vec[o]) > 0.00000001:
                     ssum += 1
             if ssum == 0:
                 sch += 1
@@ -793,3 +781,10 @@ plt.show()
 #res1 = sim.simulate(circuit1)
 #print(circuit1)
 #print(res1)
+'''
+[0.219, 0.203, 0.167, 0.163, 0.143, 0.152, 0.145, 0.14, 0.134, 0.109, 0.125, 0.127, 0.095]
+[0.278, 0.274, 0.208, 0.211, 0.193, 0.178, 0.161, 0.129, 0.147, 0.145, 0.151, 0.139, 0.136]
+[0.379, 0.296, 0.287, 0.252, 0.203, 0.226, 0.189, 0.2, 0.179, 0.213, 0.191, 0.203, 0.188]
+[0.453, 0.392, 0.362, 0.3, 0.311, 0.295, 0.24, 0.244, 0.245, 0.252, 0.214, 0.216, 0.231]
+[0.608, 0.54, 0.483, 0.436, 0.395, 0.34, 0.31, 0.318, 0.308, 0.287, 0.286, 0.277, 0.272]
+'''
