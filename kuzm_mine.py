@@ -63,6 +63,36 @@ paulies1 = [id, X, Y, Z]
 def dag(matrix):
     return np.conj(matrix.T)
 
+def EE(bas, i, j, p0, paulies, pinv):
+    v1 = bas[i]
+    v2 = bas[j]
+    id = paulies[0]
+    x = paulies[1]
+    y = paulies[2]
+    z = paulies[3]
+    K0 = (1-p0)**0.5  * id
+    #K0 = id
+    K1 = p0**0.5 / 3**0.5 * x
+    #K1 = x
+    K2 = p0**0.5 / 3**0.5 * y
+    #K2 = y
+    K3 = p0 ** 0.5 / 3**0.5 * z
+    #K3 = z
+    #mat_sum = K0 @ dag(K0) + K1 @ dag(K1) + K2 @ dag(K2) + K3 @ dag(K3)
+    #print(mat_sum)
+    #print(np.trace(mat_sum))
+    #print()
+    #print(dag(K3))
+    _rho = v1 @ (v2.T)
+    #print(_rho)
+    if i == 0 and j == 0:
+        ksgfsg = 0
+        print('eij', K0 @ _rho @ dag(K0) + K1 @ _rho @ dag(K1) + K2 @ _rho @ dag(K2) + K3 @ _rho @ dag(K3))
+    print('ee', np.trace(K0 @ _rho @ dag(K0) + K1 @ _rho @ dag(K1) + K2 @ _rho @ dag(K2) + K3 @ _rho @ dag(K3)))
+    #print()
+    return (K0 @ _rho @ dag(K0) + K1 @ _rho @ dag(K1) + K2 @ _rho @ dag(K2) + K3 @ _rho @ dag(K3))
+
+
 def E(bas, i, j, p0, paulies):
     v1 = bas[i]
     v2 = bas[j]
@@ -70,21 +100,24 @@ def E(bas, i, j, p0, paulies):
     x = paulies[1]
     y = paulies[2]
     z = paulies[3]
-    K0 = (1-p0)**0.5 * id
-    K0 = id
-    K1 = p0**0.5 / 3**0.5 * x
-    K1 = x
-    K2 = p0**0.5 / 3**0.5 * y
-    K2 = y
-    K3 = p0 ** 0.5 / 3**0.5 * z
-    K3 = z
+    #K0 = (1-p0)**0.5 * id
+    K0 = id / 2
+    #K1 = p0**0.5 / 3**0.5 * x
+    K1 = x / 2
+    #K2 = p0**0.5 / 3**0.5 * y
+    K2 = y / 2
+    #K3 = p0 ** 0.5 / 3**0.5 * z
+    K3 = z / 2
     #mat_sum = K0 @ dag(K0) + K1 @ dag(K1) + K2 @ dag(K2) + K3 @ dag(K3)
     #print(mat_sum)
     #print()
     #print(dag(K3))
     _rho = v1 @ (v2.T)
+
     #print(_rho)
-    #print(K0 @ _rho @ dag(K0) + K1 @ _rho @ dag(K1) + K2 @ _rho @ dag(K2) + K3 @ _rho @ dag(K3))
+    if i == 0 and j == 0:
+        k = 0
+    print('e', np.trace(K0 @ _rho @ dag(K0) + K1 @ _rho @ dag(K1) + K2 @ _rho @ dag(K2) + K3 @ _rho @ dag(K3)))
     #print()
     return K0 @ _rho @ dag(K0) + K1 @ _rho @ dag(K1) + K2 @ _rho @ dag(K2) + K3 @ _rho @ dag(K3)
 
@@ -307,28 +340,47 @@ class QutritDepolarizingChannel(QuditGate):
         super().__init__(dimension=3, num_qubits=1)
 
         # Calculation of the parameter p based on average experimental error of single qudit gate
-        f1 = 0.59
+        f1 = 0.8
         self.p1 = (1 - f1) / (1 - 1 / self.d ** 2)
         #print(self.d)
         #print((1 / self.d ** 2))
 
         # Choi matrix initialization
+        '''
         if p_matrix is None:
-            self.p_matrix = self.p1 / (self.d ** 2) * np.ones((self.d, self.d))
+            self.p_matrix = (1 - self.p1) / (self.d ** 2) * np.ones((self.d, self.d))
+            self.p_matrix = np.zeros_like(self.p_matrix)
             #self.p_matrix = np.ones((self.d, self.d))
         else:
             self.p_matrix = p_matrix
+        #self.p_matrix[0, 0] += (1 - self.p1)  # identity probability
+        for o in range(3):
+            for oo in range(3):
+                #self.p_matrix[o, oo] = 1 / np.trace(E(basis, o, oo, self.p1, paulies1))
+                self.p_matrix[o, oo] = 1 / 9
+        #self.p_matrix[0, 0] += 1
+        '''
+
+        if p_matrix is None:
+            self.p_matrix = self.p1 / (self.d ** 2) * np.ones((self.d, self.d))
+        else:
+            self.p_matrix = p_matrix
         self.p_matrix[0, 0] += (1 - self.p1)  # identity probability
+        print('prob[0,0]', self.p_matrix[0, 0])
+        print('prob_sum', self.p_matrix.sum())
+
         print('prob_sum', self.p_matrix.sum())
 
     def _mixture_(self):
         ps = []
         for i in range(self.d):
             for j in range(self.d):
+                pinv = np.linalg.inv(self.p_matrix)
                 op = E(basis, i, j, self.p1, paulies1)
                 #print(np.trace(op))
                 ps.append(op)
-        print('total_sum', (np.trace(np.array(ps)) * self.p_matrix).sum())
+        #print('total_sum', (np.trace(np.array(ps)) * self.p_matrix).sum())
+        #chm = np.kron(np.ones(3), ps)
         return tuple(zip(self.p_matrix.flatten(), ps))
 
     def _circuit_diagram_info_(self, args):
@@ -373,7 +425,8 @@ if __name__ == '__main__':
     #print(np.kron(generalized_sigma(3, 1, 1, dimension=2), generalized_sigma(1, 0, 0, dimension=2)))
     print('Qutrit single depolarization channel. f1 = 0.99')
     circuit = cirq.Circuit()
-    circuit.append([h(q0)])
+    #circuit.append([h(q0)])
+    #circuit.append([h(q1)])
     circuit.append(QutritDepolarizingChannel().on(q0))
     #print(circuit)
     #print()
@@ -385,7 +438,9 @@ if __name__ == '__main__':
 
     res1 = sim.simulate(circuit)
     #measured_bit = res1.measurements[str(q0)][0]
-    print(circuit)
+    #print(circuit)
     #print('measured_bit', measured_bit)
-    print(cirq.final_density_matrix(circuit))
+    print('fdm', cirq.final_density_matrix(circuit))
+    print('final_trace', np.trace(cirq.final_density_matrix(circuit)))
+    print(E(basis, 2, 2,0.59, paulies1))
     #print(np.kron(generalized_sigma(1, 0, 1, dimension=2), generalized_sigma(1, 0, 1, dimension=2)))
