@@ -8,6 +8,9 @@ from cirq.circuits import InsertStrategy
 from scipy import linalg
 from cirq import protocols
 from cirq.testing import gate_features
+import random
+N = 1000
+PMS = 0.89
 
 
 def R(fi, hi, i=0, j=1):
@@ -119,6 +122,7 @@ class U(cirq.Gate):
         self.mat = mat
         self.diag_info = diag_i
 
+
     def _qid_shape_(self):
         return (3,)
 
@@ -137,6 +141,8 @@ def U1(cirquit, q1, q2):
     cirquit.append([u2(q1)], strategy=InsertStrategy.INLINE)
     xx = TwoQuditMSGate3()
     cirquit.append([xx(q1, q2)], strategy=InsertStrategy.INLINE)
+    error(cirquit, [q1, q2], PMS)
+
 
 
 def U1_c(cirquit, q1, q2):
@@ -147,6 +153,7 @@ def U1_c(cirquit, q1, q2):
     cirquit.append([xx_c(q1, q2)], strategy=InsertStrategy.INLINE)
     cirquit.append([u2(q1)], strategy=InsertStrategy.INLINE)
     cirquit.append([u1(q1), u6(q2)], strategy=InsertStrategy.INLINE)
+    error(cirquit, [q1, q2], PMS)
 
 
 def CX(cirquit, q1, q2):
@@ -162,6 +169,7 @@ def CX(cirquit, q1, q2):
     cirquit.append([u3(q1), u3(q2)], strategy=InsertStrategy.INLINE)
     cirquit.append([u4(q1)], strategy=InsertStrategy.INLINE)
     cirquit.append([u5(q1)], strategy=InsertStrategy.INLINE)
+    error(cirquit, [q1, q2], PMS)
 
 
 def CCX(cirquit, q1, q2, q3):
@@ -539,10 +547,46 @@ def error_correction(circuit, qutrits):
   CCCCY(circuit, a1, a2, a3, a4, q4)
   circuit1.append([x(a1)], strategy=InsertStrategy.INLINE)
 
+def error(circuit, qutrits, p):
+    x = X1()
+    y = Y1()
+    z = Z1()
+    rv = random.randint(0, 10000)
+    n = len(qutrits)
+    if rv < p * 10000:
+        return
+    else:
+        for i in range(n):
+            rv = random.randint(0,3)
+            if rv == 1:
+                circuit.append(x(qutrits[i]), strategy=InsertStrategy.INLINE)
+            if rv == 2:
+                circuit.append(y(qutrits[i]), strategy=InsertStrategy.INLINE)
+            if rv == 3:
+                circuit.append(z(qutrits[i]), strategy=InsertStrategy.INLINE)
+
+def X1_l(circuit, lqubits):
+  x = X1()
+  z = Z1()
+  q1, q2, q3, q4, q5 = lqubits[0], lqubits[1], lqubits[2], lqubits[3], lqubits[4]
+  gates = [z(q1), z(q4)]
+  circuit.append(gates, strategy=InsertStrategy.INLINE)
+  gates = [x(q1), x(q2),x(q3),x(q4),x(q5)]
+  circuit.append(gates, strategy=InsertStrategy.INLINE)
+
+def X1_l(circuit, lqubits):
+  x = X1()
+  z = Z1()
+  q1, q2, q3, q4, q5 = lqubits[0], lqubits[1], lqubits[2], lqubits[3], lqubits[4]
+  gates = [x(q1), x(q4)]
+  circuit.append(gates, strategy=InsertStrategy.INLINE)
+  gates = [z(q5)]
+  circuit.append(gates, strategy=InsertStrategy.INLINE)
+
+#def make_error(p):
 
 
-
-
+#Основная операция
 x = X1()
 x2 = X2()
 z = Z1()
@@ -555,28 +599,65 @@ sim = cirq.Simulator()
 circuit1 = cirq.Circuit()
 qutrits1 = []
 
-for i in range(2):
-    qutrits1.append(cirq.LineQid(i, dimension=2))
 
-gates1 = [cirq.H(qutrits1[0]), cirq.CNOT(qutrits1[0], qutrits1[1])]
-circuit1.append(gates1)
-circuit1.append([cirq.measure(qutrits1[0])])
+
+for i in range(10):
+    qutrits1.append(cirq.LineQid(i, dimension=3))
+
+#кодируемое состояние
+gates1 = [x(qutrits1[0])]
+#circuit1.append(gates1)
+encoding_qubit(circuit1, qutrits1)
+
+#ошибка
+gates1 = [z(qutrits1[4])]
+#circuit1.append(gates1)
+
+#error_correction(circuit1, qutrits1)
+
+#error(circuit1, qutrits1, 0.5)
+decoding_qubit(circuit1, qutrits1)
+#circuit1.append([cirq.measure(qutrits1[1])])
+#circuit1.append([cirq.measure(qutrits1[2])])
+#circuit1.append([cirq.measure(qutrits1[3])])
+#circuit1.append([cirq.measure(qutrits1[4])])
 '''
-res0 = sim.simulate(circuit1)
-
-print(res0)
-print('RRRRRRRRRRRRRRRRRRRRRRRRRR')
-
 res1 = sim.simulate(circuit1)
-print(res1)
-m0 = res1.measurements[str(qutrits1[0])][0]
-print('RRRRRRRRRRRRRRRRRRRRRRRR', m0)
-
+measured_bit = res1.measurements[str(qutrits1[1])][0]
+print(f'Measured bit: {measured_bit}')
+res1 = sim.simulate(circuit1)
+measured_bit = res1.measurements[str(qutrits1[2])][0]
+print(f'Measured bit: {measured_bit}')
+res1 = sim.simulate(circuit1)
+measured_bit = res1.measurements[str(qutrits1[3])][0]
+print(f'Measured bit: {measured_bit}')
+res1 = sim.simulate(circuit1)
+measured_bit = res1.measurements[str(qutrits1[4])][0]
+print(f'Measured bit: {measured_bit}')
 '''
-circuit1.append([cirq.measure(qutrits1[1])])
-res2 = sim.simulate(circuit1)
+def m(a,b, c, d, e):
+   return np.kron(np.kron(np.kron(np.kron(a, b), c), d), e)
 
-m1 = res2.measurements[str(qutrits1[1])][0]
-m0 = res2.measurements[str(qutrits1[0])][0]
-print(m0 == m1, m0, m1)
+psi0 =
 
+e = np.array([0,1,0])
+z = np.array([1,0,0])
+sch = 0
+for i in range(N):
+    sim = cirq.Simulator()
+    circuit1 = cirq.Circuit()
+    qutrits1 = []
+    for j in range(10):
+        qutrits1.append(cirq.LineQid(j, dimension=3))
+    encoding_qubit(circuit1, qutrits1)
+    decoding_qubit(circuit1, qutrits1)
+    res1 = sim.simulate(circuit1)
+    #print(np.dot(res1.final_state_vector + m(z,z,z,z,z), res1.final_state_vector + m(z,z,z,z,z)))
+    if i == 0:
+        print(res1)
+    if np.dot(res1.final_state_vector + m(z,z,z,z,z), res1.final_state_vector + m(z,z,z,z,z)) < 0.001:
+        sch += 1
+print('res', sch)
+#print(res1.final_state_vector)
+#print(circuit1)
+# print(res1)

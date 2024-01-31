@@ -25,7 +25,7 @@ Y2 = np.array([[0,0,complex(0, -1)],[0, 1,0], [complex(0, 1),0,0]])
 Z2 = np.array([[1, 0,0], [0, 1,0], [0,0,-1]])
 I = np.array([[1,0,0 ], [0,1, 0], [0,0,1]])
 
-A = [('x1', X1),('y1', Y1),('z1', Z1),('i', I), ]
+A = [('x1', X1),('z1', Z1),('i', I) ]
 i = 0
 for m1 in A:
   for m2 in A:
@@ -34,7 +34,7 @@ for m1 in A:
         for m5 in A:
           s = m(m1[1], m2[1], m3[1], m4[1], m5[1])
 
-          if np.dot((zl - np.matmul(s, zl)), (zl - np.matmul(s, zl))) == float(0) and np.dot((el - np.matmul(s, el)), (el - np.matmul(s, el))) == float(0):
+          if np.dot((zl - np.matmul(s, zl)), (zl - np.matmul(s, zl))) <= float(0.001) and np.dot((el + np.matmul(s, el)), (el + np.matmul(s, el))) <= float(0.001):
               i += 1
               print(m1[0],m2[0],m3[0],m4[0],m5[0])
               print(i)

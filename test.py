@@ -1145,83 +1145,84 @@ print(f'Measured bit: {measured_bit}')
 def m(a ,b, c, d, e):
     return np.kron(np.kron(np.kron(np.kron(a, b), c), d), e)
 
-def run_circuit(t, N):
+sps1 = []
+sps2 = []
+'''
+for PMS2 in np.arange(0.95, 1.004, 0.005):
+    PMS2 = 1
+    print(sps1)
     sps1 = []
-    print(t)
-    sch = 0
-    x = X1()
-    y = Y1()
-    for alf1 in np.linspace(0, 2 * np.pi, N):
-        for alf2 in np.linspace(0, np.pi, N // 2):
+
+    for t in np.arange(0.5,0.6,0.1):
+        print(t)
+        #sps1.append(PMS2)
+        sch = 0
+        for i in range(N):
+            x = X1()
+            y = Y1()
             sim = cirq.Simulator()
             circuit1 = cirq.Circuit()
             qutrits1 = []
             for j in range(5):
                 qutrits1.append(cirq.LineQid(j, dimension=3))
-            #alf1 = random.randint(0, 1000) / 1000 * 2 * np.pi
-            #alf2 = random.randint(0, 1000) / 1000 * 2 * np.pi
-
-            povorot = R(alf1, alf2, 0, 1)
+            alf1 = random.randint(0,1000) / 1000 * 2 * np.pi
+            alf2 = random.randint(0,1000) / 1000 * 2 * np.pi
+            povorot = R(0, alf1, 0, 1) @ R(np.pi / 2, alf2, 0, 1)
             pg = U(povorot)
             circuit1.append([pg(qutrits1[0])], strategy=InsertStrategy.INLINE)
-
             encoding_qubit(circuit1, qutrits1)
-
             time_error(circuit1, qutrits1, t)
-
-            # circuit1.append([y(qutrits1[2])])
+            #circuit1.append([y(qutrits1[2])])
             decoding_qubit(circuit1, qutrits1)
-            '''
+            
             res1 = sim.simulate(circuit1)
             print('88888888')
             print('res1', res1)
             print('88888888')
-            '''
+            
             error_correction(circuit1, qutrits1)
-
-            povorot_r = R(alf1, -alf2, 0, 1)
+            povorot_r = R(np.pi / 2, -alf2, 0, 1) @ R(0, -alf1, 0, 1)
             pg_r = U(povorot_r)
             circuit1.append([pg_r(qutrits1[0])], strategy=InsertStrategy.INLINE)
 
 
+
+            circuit1.append([cirq.measure(qutrits1[0])])
+
             res1 = sim.simulate(circuit1)
-            cirq.final_density_matrix(circuit1)
-
-            sps1.append(sch / N)
-            print('zn', sch / N)
-            print(sps1)
+            measured_bit = res1.measurements[(qutrits1[0])][0]
+            if measured_bit == 0:
+                sch = sch + 1
 
 
-
-
-def main():
-    run_circuit()
-
-
-
+        sps1.append(sch / N)
 
 '''
-fig = plt.figure(figsize=(7, 4))
-ax = fig.add_subplot()
-ax.scatter(sps1, sps2, color='b', s = 5)
-print(sps1)
-print(sps2)
-plt.show()
+PMS2 = 1
+sch = 0
+for i in range(5000):
+    sim = cirq.Simulator()
+    circuit1 = cirq.Circuit()
+    q = []
+    for j in range(2):
+        q.append(cirq.LineQid(j, dimension=3))
+    for i in range(1):
+        circuit1.append([h(q[0])])
+    #CX(circuit1, q[0], q[1])
+    #dpg_t = QutritDepolarizingChannel(0.5)
+    #circuit1.append([cirq.measure(q[1])])
+    #circuit1.append([dpg_t.on(q[0])], strategy=InsertStrategy.INLINE)
+    #circuit1.append([cirq.measure(q[0])])
+
+    res1 = sim.simulate(circuit1)
+    #measured_bit0 = res1.measurements[str(q[0])][0]
+    #measured_bit1 = res1.measurements[str(q[1])][0]
+    #if measured_bit0 == measured_bit1:
+    sch += 1
+print(sch / 1000)
 '''
 # print(res1.final_state_vector)
 #res1 = sim.simulate(circuit1)
 #print(circuit1)
 #print(res1)
 '''
-[0.219, 0.203, 0.167, 0.163, 0.143, 0.152, 0.145, 0.14, 0.134, 0.109, 0.125, 0.127, 0.095]
-[0.278, 0.274, 0.208, 0.211, 0.193, 0.178, 0.161, 0.129, 0.147, 0.145, 0.151, 0.139, 0.136]
-[0.379, 0.296, 0.287, 0.252, 0.203, 0.226, 0.189, 0.2, 0.179, 0.213, 0.191, 0.203, 0.188]
-[0.453, 0.392, 0.362, 0.3, 0.311, 0.295, 0.24, 0.244, 0.245, 0.252, 0.214, 0.216, 0.231]
-[0.608, 0.54, 0.483, 0.436, 0.395, 0.34, 0.31, 0.318, 0.308, 0.287, 0.286, 0.277, 0.272]
-
-
-[1.0, 1.0, 1.0, 0.75, 0.8, 0.55, 0.55, 0.55, 0.6, 0.6, 0.45, 0.65, 0.5, 0.6, 0.3, 0.4, 0.4, 0.55, 0.65, 0.65, 0.45, 0.8, 0.5, 0.5, 0.4]
-[1.0, 1.0, 0.9, 0.8, 0.8, 0.6, 0.8, 0.85, 0.65, 0.45, 0.7, 0.45, 0.55, 0.55, 0.6, 0.5, 0.6, 0.4, 0.4, 0.5, 0.6, 0.6, 0.55, 0.5, 0.55]
-
-'''
-print('31.01.2024')

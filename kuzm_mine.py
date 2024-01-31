@@ -87,8 +87,8 @@ def EE(bas, i, j, p0, paulies, pinv):
     #print(_rho)
     if i == 0 and j == 0:
         ksgfsg = 0
-        print('eij', K0 @ _rho @ dag(K0) + K1 @ _rho @ dag(K1) + K2 @ _rho @ dag(K2) + K3 @ _rho @ dag(K3))
-    print('ee', np.trace(K0 @ _rho @ dag(K0) + K1 @ _rho @ dag(K1) + K2 @ _rho @ dag(K2) + K3 @ _rho @ dag(K3)))
+        #print('eij', K0 @ _rho @ dag(K0) + K1 @ _rho @ dag(K1) + K2 @ _rho @ dag(K2) + K3 @ _rho @ dag(K3))
+    #print('ee', np.trace(K0 @ _rho @ dag(K0) + K1 @ _rho @ dag(K1) + K2 @ _rho @ dag(K2) + K3 @ _rho @ dag(K3)))
     #print()
     return (K0 @ _rho @ dag(K0) + K1 @ _rho @ dag(K1) + K2 @ _rho @ dag(K2) + K3 @ _rho @ dag(K3))
 
@@ -116,8 +116,8 @@ def E(bas, i, j, p0, paulies):
 
     #print(_rho)
     if i == 0 and j == 0:
-        k = 0
-    print('e', np.trace(K0 @ _rho @ dag(K0) + K1 @ _rho @ dag(K1) + K2 @ _rho @ dag(K2) + K3 @ _rho @ dag(K3)))
+        cgjjjfjk = 0
+    #print('e', np.trace(K0 @ _rho @ dag(K0) + K1 @ _rho @ dag(K1) + K2 @ _rho @ dag(K2) + K3 @ _rho @ dag(K3)))
     #print()
     return K0 @ _rho @ dag(K0) + K1 @ _rho @ dag(K1) + K2 @ _rho @ dag(K2) + K3 @ _rho @ dag(K3)
 
@@ -334,14 +334,26 @@ if __name__ == '__main__':
     print(circuit)
 '''
 
+class X2(cirq.Gate):
+    def _qid_shape_(self):
+        return (3,)
+
+    def _unitary_(self):
+        return R(0, np.pi, 0, 2)
+
+    def _circuit_diagram_info_(self, args):
+        return 'X2'
+
+
+
 class QutritDepolarizingChannel(QuditGate):
 
-    def __init__(self, p_matrix=None):
+    def __init__(self, PP, p_matrix=None):
         super().__init__(dimension=3, num_qubits=1)
 
         # Calculation of the parameter p based on average experimental error of single qudit gate
-        f1 = 0.8
-        self.p1 = (1 - f1) / (1 - 1 / self.d ** 2)
+        f1 = 0.9
+        self.p1 = PP
         #print(self.d)
         #print((1 / self.d ** 2))
 
@@ -366,10 +378,11 @@ class QutritDepolarizingChannel(QuditGate):
         else:
             self.p_matrix = p_matrix
         self.p_matrix[0, 0] += (1 - self.p1)  # identity probability
-        print('prob[0,0]', self.p_matrix[0, 0])
-        print('prob_sum', self.p_matrix.sum())
+        self.p_matrix = np.array([[(1 - self.p1), self.p1 / 3], [self.p1 / 3, self.p1 / 3]])
+        #print('prob[0,0]', self.p_matrix[0, 0])
+        #print('prob_sum', self.p_matrix.sum())
 
-        print('prob_sum', self.p_matrix.sum())
+        #print('prob_sum', self.p_matrix.sum())
 
     def _mixture_(self):
         ps = []
@@ -381,7 +394,12 @@ class QutritDepolarizingChannel(QuditGate):
                 ps.append(op)
         #print('total_sum', (np.trace(np.array(ps)) * self.p_matrix).sum())
         #chm = np.kron(np.ones(3), ps)
-        return tuple(zip(self.p_matrix.flatten(), ps))
+        X = np.array([[0, 1, 0], [1, 0, 0], [0, 0, 1]])
+        Y = np.array([[0, complex(0, -1), 0], [complex(0, 1), 0, 0], [0, 0, 1]])
+        Z = np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]])
+        id = np.eye(3)
+        shiz_massiv = [id, X, Y, Z]
+        return tuple(zip(self.p_matrix.flatten(), shiz_massiv))
 
     def _circuit_diagram_info_(self, args):
         return f"Φ(p1={self.p1:.3f})"
@@ -415,19 +433,24 @@ class DoubleQuquartDepolarizingChannel(QuditGate):
     def _circuit_diagram_info_(self, args):
         return f"ΦΦ(p2={self.p2:.3f})", f"ΦΦ(p2={self.p2:.3f})"
 
+def printm(m):
+    for i in m:
+        print(*[round(j,2) for j in i])
+
 
 if __name__ == '__main__':
     n = 2  # number of qudits
     d = 3  # dimension of qudits
     h = H()
+    x2 = X2()
 
     q0, q1 = cirq.LineQid.range(n, dimension=d)
     #print(np.kron(generalized_sigma(3, 1, 1, dimension=2), generalized_sigma(1, 0, 0, dimension=2)))
     print('Qutrit single depolarization channel. f1 = 0.99')
     circuit = cirq.Circuit()
-    #circuit.append([h(q0)])
+    circuit.append([h(q0)])
     #circuit.append([h(q1)])
-    circuit.append(QutritDepolarizingChannel().on(q0))
+    circuit.append(QutritDepolarizingChannel(0.01).on(q0))
     #print(circuit)
     #print()
 
@@ -440,7 +463,9 @@ if __name__ == '__main__':
     #measured_bit = res1.measurements[str(q0)][0]
     #print(circuit)
     #print('measured_bit', measured_bit)
-    print('fdm', cirq.final_density_matrix(circuit))
+    print((z + e) @ (z.T + e.T))
+    print('fdm')
+    printm(cirq.final_density_matrix(circuit))
     print('final_trace', np.trace(cirq.final_density_matrix(circuit)))
-    print(E(basis, 2, 2,0.59, paulies1))
+    #print(E(basis, 2, 2,0.59, paulies1))
     #print(np.kron(generalized_sigma(1, 0, 1, dimension=2), generalized_sigma(1, 0, 1, dimension=2)))

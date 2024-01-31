@@ -126,8 +126,8 @@ S1 = m(I, X, X, X, Z)
 
 
 
-z = np.array([1,0])
-e = np.array([0,1])
+z = np.array([[1,0, 0]]).T
+e = np.array([[0,1, 0]]).T
 f = np.array([0,0,1])
 zl = (1/8**0.5) * (m(z,z,z,z,z) - m(e,z,e,e,e) - m(z,e,z, e, e)+ m(e,e,e,z,z) + m(e,z,z,e,z)+ m(z,z,e,z,e) + m(e,e,z,z,e) + m(z,e,e,e,z))
 z,e = e,z
@@ -135,5 +135,7 @@ el = (1/8**0.5) * (m(z,z,z,z,z) - m(e,z,e,e,e) + m(z,e,z, e, e)- m(e,e,e,z,z) + 
 z,e = z,e
 #fl = (1/8**0.5) * (m(f,z,z,z,z) - m(f,z,z,e,z) + m(f,z, e,z, e)- m(f,z,e,e,e) + m(f,e,z,z,e)+ m(f, e,z,e,e) + m(f,e,e,z,z) + m(f,e,e,e,z))
 psi = zl
-printv(S1 @ zl - zl)
+#printv(S1 @ zl - zl)
+psi = (z + e) / 2**0.5
+print(np.trace(psi @ psi.T))
 

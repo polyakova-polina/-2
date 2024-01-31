@@ -840,7 +840,7 @@ print(f'Measured bit: {measured_bit}')
 #u_1i1 = eie()
 
 #circuit1.append((u_1i1(qutrits1[1]).controlled_by(qutrits1[0])))
-#decoding_qubit(circuit1, qutrits1)
+#decoding_qubit(circuit1, qutrits1)0,
 
 #circuit1.append([cirq.measure(qutrits1[0])])
 

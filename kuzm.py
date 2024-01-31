@@ -1,13 +1,41 @@
 import numpy as np
-import cirq
-
-
-import numpy as np
 import sympy
 import scipy.stats
-
+from scipy import linalg
 import cirq
 
+def R(fi, hi, i=0, j=1):
+    I = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    x01_for_ms = np.array([[0, 1, 0],
+                           [1, 0, 0],
+                           [0, 0, 0]])
+    y01_for_ms = np.array([[0, complex(0, -1), 0],
+                           [complex(0, 1), 0, 0],
+                           [0, 0, 0]])
+    x12_for_ms = np.array([[0, 0, 0],
+                           [0, 0, 1],
+                           [0, 1, 0]])
+    y12_for_ms = np.array([[0, 0, 0],
+                           [0, 0, complex(0, -1)],
+                           [0, complex(0, 1), 0]])
+    x02_for_ms = np.array([[0, 0, 1],
+                           [0, 0, 0],
+                           [1, 0, 0]])
+    y02_for_ms = np.array([[0, 0, complex(0, -1)],
+                           [0, 0, 0],
+                           [complex(0, 1), 0, 0]])
+    if (i, j) == (0, 1):
+        x_for_ms = x01_for_ms
+        y_for_ms = y01_for_ms
+    elif (i, j) == (1, 2):
+        x_for_ms = x12_for_ms
+        y_for_ms = y12_for_ms
+    else:
+        x_for_ms = x02_for_ms
+        y_for_ms = y02_for_ms
+    m = np.cos(fi) * x_for_ms + np.sin(fi) * y_for_ms
+
+    return linalg.expm(complex(0, -1) * m * hi / 2)
 
 def nice_repr(parameter):
     """Nice parameter representation
@@ -54,7 +82,7 @@ def generalized_sigma(index, i, j, dimension=4):
 class QuditGate(cirq.Gate):
     """Base class for qudits gates"""
 
-    def __init__(self, dimension=3, num_qubits=1):
+    def __init__(self, dimension=4, num_qubits=1):
         self.d = dimension
         self.n = num_qubits
         self.symbol = None
@@ -102,6 +130,49 @@ class QuditRGate(QuditGate):
         SUB = str.maketrans("0123456789", "₀₁₂₃₄₅₆₇₈₉")
         SUP = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
         return f'{self.symbol}{str(self.l1).translate(SUB)}{str(self.l2).translate(SUP)}' + f'({nice_repr(self.theta)}, {nice_repr(self.phi)})'
+
+
+class QuditGeneralizedXGate(QuditGate):
+    """Generalized X Gate"""
+
+    def __init__(self, dimension=4):
+        super().__init__(dimension=dimension)
+
+    def _unitary_(self):
+        N = self.d
+        u = np.eye(N)
+
+        for i in range(N):
+            u[:][i] = np.eye(N)[:][(i + 1) % N]
+
+        return u
+
+    def get_unitary(self):
+        return self._unitary_()
+
+    def _circuit_diagram_info_(self, args):
+        self.symbol = 'Xgen'
+        return self.symbol
+
+
+class QuditGeneralizedZGate(QuditGate):
+    """Generalized Z Gate"""
+
+    def __init__(self, dimension=4):
+        super().__init__(dimension=dimension)
+
+    def _unitary_(self):
+        N = self.d
+        w = np.exp(2 * np.pi * 1j / N)
+        u = np.diag([w ** k for k in range(N)])
+        return u
+
+    def get_unitary(self):
+        return self._unitary_()
+
+    def _circuit_diagram_info_(self, args):
+        self.symbol = 'Zgen'
+        return self.symbol
 
 
 class QuditXXGate(QuditGate):
@@ -180,7 +251,7 @@ class QuditBarrier(QuditGate):
 class QuditArbitraryUnitary(QuditGate):
     """Random unitary acts on qubits"""
 
-    def __init__(self, dimension=4, num_qudits=2):
+    def __init__(self, dimension=3, num_qudits=2):
         super().__init__(dimension=dimension, num_qubits=num_qudits)
         self.unitary = np.array(scipy.stats.unitary_group.rvs(self.d ** self.n))
         self.symbol = 'U'
@@ -188,68 +259,78 @@ class QuditArbitraryUnitary(QuditGate):
     def _unitary_(self):
         return self.unitary
 
+
+
+
+#from qudit_gates import QuditGate, QuditGeneralizedXGate, QuditGeneralizedZGate
+
+
 class QuquartDepolarizingChannel(QuditGate):
 
-    def __init__(self, p_matrix=None):
-        super().__init__(dimension=4, num_qubits=1)
+    def __init__(self, p1=None):
+        super().__init__(dimension=3, num_qubits=1)
 
         # Calculation of the parameter p based on average experimental error of single qudit gate
-        f1 = 0.5
-        self.p1 = (1 - f1) / (1 - 1 / self.d ** 2)
-
-        # Choi matrix initialization
-        if p_matrix is None:
-            self.p_matrix = self.p1 / (self.d ** 2) * np.ones((self.d, self.d))
+        if p1 is None:
+            f1 = 0.99
+            self.p1 = (1 - f1)
         else:
-            self.p_matrix = p_matrix
-        self.p_matrix[0, 0] += (1 - self.p1)  # identity probability
-        print('prob[0,0]', self.p_matrix[0, 0])
-        print('prob_sum', self.p_matrix.sum())
+            self.p1 = p1
+
+        self.mixture_probabilities = np.ones(self.d ** 2) * self.p1 / (self.d ** 2 - 1)
+        self.mixture_probabilities[0] = (1 - self.p1)  # identity probability
 
     def _mixture_(self):
+
+        x_unitary = R(0,np.pi,0,1)
+        y_unitary = R(np.pi / 2, np.pi, 0, 1)
+        z_unitary = x_unitary @ y_unitary
+
         ps = []
-        for i in range(self.d):
-            for j in range(self.d):
-                op = np.kron(generalized_sigma(i, 0, 1, dimension=2), generalized_sigma(j, 0, 1, dimension=2))
-                print(np.trace(op) * self.p_matrix[i][j])
-                print(i, j)
-                print(op)
+        for alpha in range(self.d):
+            for beta in range(self.d):
+                op = np.linalg.matrix_power(x_unitary, alpha) @ np.linalg.matrix_power(z_unitary, beta)
                 ps.append(op)
 
-        print('total_sum', (np.trace(np.array(ps)) * self.p_matrix).sum())
-        return tuple(zip(self.p_matrix.flatten(), ps))
+        return tuple(zip(self.mixture_probabilities, ps))
+
+    def get_mixture(self):
+        return self._mixture_()
 
     def _circuit_diagram_info_(self, args):
         return f"Φ(p1={self.p1:.3f})"
 
-def printm(m):
-    for i in m:
-        print(*[round(j,2) for j in i])
 
 class DoubleQuquartDepolarizingChannel(QuditGate):
-    def __init__(self, p_matrix=None):
-        super().__init__(dimension=4, num_qubits=2)
+    def __init__(self, p2=None):
+        super().__init__(dimension=3, num_qubits=2)
 
-        # Calculation of the parameter p2 based on average experimental error of two qudit gate
-        f2 = 0.96
-        self.p2 = (1 - f2) / (1 - 1 / (self.d ** 2) ** 2)
+        # Calculation of the parameter p based on average experimental error of single qudit gate
+        if p2 is None:
+            f2 = 0.96
+            self.p2 = (1 - f2)
+        else:
+            self.p2 = p2
 
-        # Choi matrix initialization
-        self.p_matrix = self.p2 / 256 * np.ones((16, 16)) if p_matrix is None else p_matrix
-        self.p_matrix[0, 0] += (1 - self.p2)  # identity probability
+        self.mixture_probabilities = np.ones(self.d ** 4) * self.p2 / (self.d ** 4 - 1)
+        self.mixture_probabilities[0] = (1 - self.p2)  # identity probability
 
     def _mixture_(self):
         ps = []
-        for i0 in range(self.d):
-            for i1 in range(self.d):
-                for i2 in range(self.d):
-                    for i3 in range(self.d):
-                        op = np.kron(np.kron(generalized_sigma(i0, 0, 1, dimension=2),
-                                                         generalized_sigma(i1, 0, 1, dimension=2)),
-                                           np.kron(generalized_sigma(i2, 0, 1, dimension=2),
-                                                         generalized_sigma(i3, 0, 1, dimension=2)))
-                        ps.append(op)
-        return tuple(zip(self.p_matrix.flatten(), ps))
+
+        x_unitary = QuditGeneralizedXGate(dimension=self.d ** 2).get_unitary()
+        z_unitary = QuditGeneralizedZGate(dimension=self.d ** 2).get_unitary()
+
+        for alpha in range(self.d ** 2):
+            for beta in range(self.d ** 2):
+
+                op = np.linalg.matrix_power(x_unitary, alpha) @ np.linalg.matrix_power(z_unitary, beta)
+                ps.append(op)
+
+        return tuple(zip(self.mixture_probabilities, ps))
+
+    def get_mixture(self):
+        return self._mixture_()
 
     def _circuit_diagram_info_(self, args):
         return f"ΦΦ(p2={self.p2:.3f})", f"ΦΦ(p2={self.p2:.3f})"
@@ -257,39 +338,16 @@ class DoubleQuquartDepolarizingChannel(QuditGate):
 
 if __name__ == '__main__':
     n = 2  # number of qudits
-    d = 4  # dimension of qudits
+    d = 3  # dimension of qudits
 
     q0, q1 = cirq.LineQid.range(n, dimension=d)
 
     print('Ququart single depolarization channel. f1 = 0.99')
-    dpg = QuquartDepolarizingChannel()
-    #dpg._mixture_()
+    dpg = QuquartDepolarizingChannel(0.5)
     circuit = cirq.Circuit(dpg.on(q0))
     print(circuit)
-    print()
-    print('final_trace', np.trace(cirq.final_density_matrix(circuit)))
-
-    print('choi')
-    f1 = 0.8
-    f1 = 0.59
-    p0 = (1 - f1) / (1 - 1 / 3 ** 2)
-    x = np.array([[0, 1, 0], [1, 0, 0], [0, 0, 1]])
-    y = np.array([[0, complex(0, -1), 0], [complex(0, 1), 0, 0], [0, 0, 1]])
-    z = np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]])
-    id = np.eye(3)
-    x = np.array([[0, 1, 0, 0], [1, 0, 0, 0], [0, 0, 1, 0], [0,0,0,1]])
-    y = np.array([[0, complex(0, -1), 0, 0], [complex(0, 1), 0, 0, 0], [0, 0, 1, 0], [0,0,0,1]])
-    z = np.array([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, 1, 0] , [0,0,0,1]])
-    id = np.eye(4)
-    K0 = (1 - p0) ** 0.5 * id
-    #K0 = id
-    K1 = p0 ** 0.5 / 3 ** 0.5 * x
-    #K1 = x
-    K2 = p0 ** 0.5 / 3 ** 0.5 * y
-    #K2 = y
-    K3 = p0 ** 0.5 / 3 ** 0.5 * z
-    #K3 = z
-
-    print(cirq.kraus_to_choi([K0, K1, K2, K3]))
-    print(np.trace(cirq.kraus_to_choi([K0, K1, K2, K3])))
-
+    sim = cirq.Simulator()
+    res1 = sim.simulate(circuit)
+    for i in range(d**2):
+        print(dpg.get_mixture()[i][0])
+    #print(dpg.get_mixture()[8])
