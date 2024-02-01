@@ -404,34 +404,70 @@ class QutritDepolarizingChannel(QuditGate):
     def _circuit_diagram_info_(self, args):
         return f"Φ(p1={self.p1:.3f})"
 
+class QutritAmplitudeChannel(QuditGate):
 
-class DoubleQuquartDepolarizingChannel(QuditGate):
-    def __init__(self, p_matrix=None):
-        super().__init__(dimension=4, num_qubits=2)
+    def __init__(self,PP, p_matrix=None):
+        super().__init__(dimension=3, num_qubits=1)
 
-        # Calculation of the parameter p2 based on average experimental error of two qudit gate
-        f2 = 0.96
-        self.p2 = (1 - f2) / (1 - 1 / (self.d ** 2) ** 2)
+        # Calculation of the parameter p based on average experimental error of single qudit gate
+        f1 = 0.9
+        self.p1 = (1 - f1) / (1 - 1 / self.d ** 2)
+        self.p1 = PP
+        #print(self.d)
+        #print((1 / self.d ** 2))
 
         # Choi matrix initialization
-        self.p_matrix = self.p2 / 256 * np.ones((16, 16)) if p_matrix is None else p_matrix
-        self.p_matrix[0, 0] += (1 - self.p2)  # identity probability
+        '''
+        if p_matrix is None:
+            self.p_matrix = (1 - self.p1) / (self.d ** 2) * np.ones((self.d, self.d))
+            self.p_matrix = np.zeros_like(self.p_matrix)
+            #self.p_matrix = np.ones((self.d, self.d))
+        else:
+            self.p_matrix = p_matrix
+        #self.p_matrix[0, 0] += (1 - self.p1)  # identity probability
+        for o in range(3):
+            for oo in range(3):
+                #self.p_matrix[o, oo] = 1 / np.trace(E(basis, o, oo, self.p1, paulies1))
+                self.p_matrix[o, oo] = 1 / 9
+        #self.p_matrix[0, 0] += 1
+        '''
+
+        if p_matrix is None:
+            self.p_matrix = self.p1 / (self.d ** 2) * np.ones((self.d, self.d))
+        else:
+            self.p_matrix = p_matrix
+        self.p_matrix[0, 0] += (1 - self.p1)  # identity probability
+        self.p_matrix = np.array([[1/3,1/3],[1/3, 0]])
+        #print('prob[0,0]', self.p_matrix[0, 0])
+        #print('prob_sum', self.p_matrix.sum())
+
+        #print('prob_sum', self.p_matrix.sum())
 
     def _mixture_(self):
         ps = []
-        for i0 in range(self.d):
-            for i1 in range(self.d):
-                for i2 in range(self.d):
-                    for i3 in range(self.d):
-                        op = np.kron(np.kron(generalized_sigma(i0, 0, 1, dimension=2),
-                                                         generalized_sigma(i1, 0, 1, dimension=2)),
-                                           np.kron(generalized_sigma(i2, 0, 1, dimension=2),
-                                                         generalized_sigma(i3, 0, 1, dimension=2)))
-                        ps.append(op)
-        return tuple(zip(self.p_matrix.flatten(), ps))
+        for i in range(self.d):
+            for j in range(self.d):
+                pinv = np.linalg.inv(self.p_matrix)
+                op = E(basis, i, j, self.p1, paulies1)
+                #print(np.trace(op))
+                ps.append(op)
+        #print('total_sum', (np.trace(np.array(ps)) * self.p_matrix).sum())
+        #chm = np.kron(np.ones(3), ps)
+        X = np.array([[0, 1, 0], [1, 0, 0], [0, 0, 1]])
+        Y = np.array([[0, complex(0, -1), 0], [complex(0, 1), 0, 0], [0, 0, 1]])
+        Z = np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]])
+        Ea1 = np.array([[1, 0, 0], [0, (1-self.p1)**0.5, 0], [0, 0, (1-self.p1)**0.5]])
+        Ea2 = np.array([[0, self.p1**0.5, 0], [0, 0, 0], [0, 0, 0]])
+        Ea3 = np.array([[0, 0, self.p1**0.5], [0, 0, 0], [0, 0, 0]])
+        id = np.eye(3)
+        shiz_massiv = [Ea1, Ea2, Ea3, id]
+        return tuple(zip(self.p_matrix.flatten(), shiz_massiv))
 
     def _circuit_diagram_info_(self, args):
-        return f"ΦΦ(p2={self.p2:.3f})", f"ΦΦ(p2={self.p2:.3f})"
+        return f"Φ(p1={self.p1:.3f})"
+
+
+
 
 def printm(m):
     for i in m:
@@ -450,7 +486,7 @@ if __name__ == '__main__':
     circuit = cirq.Circuit()
     circuit.append([h(q0)])
     #circuit.append([h(q1)])
-    circuit.append(QutritDepolarizingChannel(0.01).on(q0))
+    circuit.append(QutritAmplitudeChannel(0.01).on(q0))
     #print(circuit)
     #print()
 
