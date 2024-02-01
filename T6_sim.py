@@ -10,11 +10,23 @@ from cirq import protocols
 from cirq.testing import gate_features
 import random
 N = 5000
-PMS1 = 1
+PMS1 = 0.999
+PMS2 = 0.99
 
 
 T0 = 25
 
+zZ = np.array([[1,0,0]]).T
+eE = np.array([[0,1,0]]).T
+fF = np.array([[0,0,1]]).T
+A = [zZ, eE, fF]
+
+B = []
+for i1 in range(3):
+    for i2 in range(3):
+        for i3 in range(3):
+            for i4 in range(3):
+                B.append(np.kron(np.kron(np.kron(A[i1], A[i2]), A[i3]), A[i4]))
 
 
 
@@ -363,6 +375,70 @@ class QutritDepolarizingChannel(QuditGate):
         Z = np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]])
         id = np.eye(3)
         shiz_massiv = [id, X, Y, Z]
+        return tuple(zip(self.p_matrix.flatten(), shiz_massiv))
+
+    def _circuit_diagram_info_(self, args):
+        return f"Φ(p1={self.p1:.3f})"
+
+
+
+class QutritAmplitudeChannel(QuditGate):
+
+    def __init__(self,PP, p_matrix=None):
+        super().__init__(dimension=3, num_qubits=1)
+
+        # Calculation of the parameter p based on average experimental error of single qudit gate
+        f1 = 0.9
+        self.p1 = (1 - f1) / (1 - 1 / self.d ** 2)
+        self.p1 = PP
+        #print(self.d)
+        #print((1 / self.d ** 2))
+
+        # Choi matrix initialization
+        '''
+        if p_matrix is None:
+            self.p_matrix = (1 - self.p1) / (self.d ** 2) * np.ones((self.d, self.d))
+            self.p_matrix = np.zeros_like(self.p_matrix)
+            #self.p_matrix = np.ones((self.d, self.d))
+        else:
+            self.p_matrix = p_matrix
+        #self.p_matrix[0, 0] += (1 - self.p1)  # identity probability
+        for o in range(3):
+            for oo in range(3):
+                #self.p_matrix[o, oo] = 1 / np.trace(E(basis, o, oo, self.p1, paulies1))
+                self.p_matrix[o, oo] = 1 / 9
+        #self.p_matrix[0, 0] += 1
+        '''
+
+        if p_matrix is None:
+            self.p_matrix = self.p1 / (self.d ** 2) * np.ones((self.d, self.d))
+        else:
+            self.p_matrix = p_matrix
+        self.p_matrix[0, 0] += (1 - self.p1)  # identity probability
+        self.p_matrix = np.array([[(1 - self.p1), self.p1 / 3], [self.p1 / 3, self.p1 / 3]])
+        #print('prob[0,0]', self.p_matrix[0, 0])
+        #print('prob_sum', self.p_matrix.sum())
+
+        #print('prob_sum', self.p_matrix.sum())
+
+    def _mixture_(self):
+        ps = []
+        for i in range(self.d):
+            for j in range(self.d):
+                pinv = np.linalg.inv(self.p_matrix)
+                op = E(basis, i, j, self.p1, paulies1)
+                #print(np.trace(op))
+                ps.append(op)
+        #print('total_sum', (np.trace(np.array(ps)) * self.p_matrix).sum())
+        #chm = np.kron(np.ones(3), ps)
+        X = np.array([[0, 1, 0], [1, 0, 0], [0, 0, 1]])
+        Y = np.array([[0, complex(0, -1), 0], [complex(0, 1), 0, 0], [0, 0, 1]])
+        Z = np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]])
+        Ea1 = np.array([[1, 0, 0], [0, (1-self.p1)**0.5, 0], [0, 0, (1-self.p1)**0.5]])
+        Ea2 = np.array([[0, self.p1**0.5, 0], [0, 0, 0], [0, 0, 0]])
+        Ea3 = np.array([[0, 0, self.p1**0.5], [0, 0, 0], [0, 0, 0]])
+        id = np.eye(3)
+        shiz_massiv = [Ea1, Ea2, Ea3]
         return tuple(zip(self.p_matrix.flatten(), shiz_massiv))
 
     def _circuit_diagram_info_(self, args):
@@ -831,6 +907,7 @@ def IXXXZ_r(cirquit, qudits, a1):
     cirquit.append([h(a1)], strategy=InsertStrategy.INLINE)
     cirquit.append([cirq.measure(a1)])
 
+'''
 def get_syndrome(circuit, qutrits):
     q0 = qutrits1[0]
     q1 = qutrits1[1]
@@ -891,6 +968,8 @@ def get_syndrome_r(circuit, qutrits):
     measured_bit = res1.measurements[str(qutrits1[5])][0]
     print(f'Measured bit: {measured_bit}')
 
+'''
+
 def CCCCX(cirquit, q1, q2, q3, q4, q5):
     U1_clear(cirquit, q1, q2)
     U1_clear(cirquit, q2, q3)
@@ -911,6 +990,8 @@ def CCCCY(cirquit, q1, q2, q3, q4, q5):
     CCCCZ(cirquit, q1, q2, q3, q4, q5)
     CCCCX(cirquit, q1, q2, q3, q4, q5)
 
+
+'''
 def ec(circuit, qutrits):
     circuit.append([cirq.measure(qutrits[1])])
     circuit.append([cirq.measure(qutrits[2])])
@@ -944,17 +1025,18 @@ def ec(circuit, qutrits):
     elif r1 == 1 and r2 == 1 and r3 == 0 and r4 == 1:
         circuit.append([y(qutrits[0])], strategy=InsertStrategy.INLINE)
 
+'''
 
 
-
-def error_correction(circuit, qutrits):
+def error_correction(circuit, qutrits1):
+    '''
     #get_syndrome(circuit, qutrits)
     # get_syndrome_r(circuit1, qutrits1)
     circuit.append([cirq.measure(qutrits[1])])
     circuit.append([cirq.measure(qutrits[2])])
     circuit.append([cirq.measure(qutrits[3])])
     circuit.append([cirq.measure(qutrits[4])])
-
+    '''
     q0 = qutrits1[0]
     q1 = qutrits1[1]
     q2 = qutrits1[2]
@@ -963,51 +1045,51 @@ def error_correction(circuit, qutrits):
 
 
     # Операции для исправления ошибок X
-    circuit1.append([x(q1)], strategy=InsertStrategy.INLINE)
+    circuit.append([x(q1)], strategy=InsertStrategy.INLINE)
     CCCCX(circuit, q1, q2, q3, q4, q0)
-    circuit1.append([x(q1)], strategy=InsertStrategy.INLINE)
+    circuit.append([x(q1)], strategy=InsertStrategy.INLINE)
 
-    circuit1.append([x(q1), x(q4)], strategy=InsertStrategy.INLINE)
+    circuit.append([x(q1), x(q4)], strategy=InsertStrategy.INLINE)
     CCCCX(circuit, q1, q2, q3, q4, q0)
-    circuit1.append([x(q1), x(q4)], strategy=InsertStrategy.INLINE)
+    circuit.append([x(q1), x(q4)], strategy=InsertStrategy.INLINE)
 
-    circuit1.append([x(q1), x(q2), x(q3)], strategy=InsertStrategy.INLINE)
+    circuit.append([x(q1), x(q2), x(q3)], strategy=InsertStrategy.INLINE)
     CCCCZ(circuit, q1, q2, q3, q4, q0)
-    circuit1.append([x(q1), x(q2), x(q3)], strategy=InsertStrategy.INLINE)
+    circuit.append([x(q1), x(q2), x(q3)], strategy=InsertStrategy.INLINE)
 
-    circuit1.append([x(q2)], strategy=InsertStrategy.INLINE)
+    circuit.append([x(q2)], strategy=InsertStrategy.INLINE)
     CCCCX(circuit, q1, q2, q3, q4, q0)
-    circuit1.append([x(q2)], strategy=InsertStrategy.INLINE)
+    circuit.append([x(q2)], strategy=InsertStrategy.INLINE)
 
 
     # Операции для исправления ошибок Y
-    circuit1.append([x(q3)], strategy=InsertStrategy.INLINE)
+    circuit.append([x(q3)], strategy=InsertStrategy.INLINE)
     CCCCY(circuit, q1, q2, q3, q4, q0)
-    circuit1.append([x(q3)], strategy=InsertStrategy.INLINE)
+    circuit.append([x(q3)], strategy=InsertStrategy.INLINE)
 
-    circuit1.append([x(q4)], strategy=InsertStrategy.INLINE)
+    circuit.append([x(q4)], strategy=InsertStrategy.INLINE)
     CCCCX(circuit, q1, q2, q3, q4, q0)
-    circuit1.append([x(q4)], strategy=InsertStrategy.INLINE)
+    circuit.append([x(q4)], strategy=InsertStrategy.INLINE)
 
-    circuit1.append([x(q1), x(q3)], strategy=InsertStrategy.INLINE)
+    circuit.append([x(q1), x(q3)], strategy=InsertStrategy.INLINE)
     CCCCZ(circuit, q1, q2, q3, q4, q0)
-    circuit1.append([x(q1), x(q3)], strategy=InsertStrategy.INLINE)
+    circuit.append([x(q1), x(q3)], strategy=InsertStrategy.INLINE)
 
-    circuit1.append([x(q2), x(q3)], strategy=InsertStrategy.INLINE)
+    circuit.append([x(q2), x(q3)], strategy=InsertStrategy.INLINE)
     CCCCX(circuit, q1, q2, q3, q4, q0)
-    circuit1.append([x(q2), x(q3)], strategy=InsertStrategy.INLINE)
+    circuit.append([x(q2), x(q3)], strategy=InsertStrategy.INLINE)
 
     CCCCZ(circuit, q1, q2, q3, q4, q0)
 
     # Операции для исправления ошибок Z
-    circuit1.append([x(q2), x(q4)], strategy=InsertStrategy.INLINE)
+    circuit.append([x(q2), x(q4)], strategy=InsertStrategy.INLINE)
     CCCCZ(circuit, q1, q2, q3, q4, q0)
-    circuit1.append([x(q2), x(q4)], strategy=InsertStrategy.INLINE)
+    circuit.append([x(q2), x(q4)], strategy=InsertStrategy.INLINE)
 
 
-    circuit1.append([x(q3), x(q4)], strategy=InsertStrategy.INLINE)
+    circuit.append([x(q3), x(q4)], strategy=InsertStrategy.INLINE)
     CCCCZ(circuit, q1, q2, q3, q4, q0)
-    circuit1.append([x(q3), x(q4)], strategy=InsertStrategy.INLINE)
+    circuit.append([x(q3), x(q4)], strategy=InsertStrategy.INLINE)
 
 
 def time_error(circuit, qutrits, t):
@@ -1145,18 +1227,24 @@ print(f'Measured bit: {measured_bit}')
 def m(a ,b, c, d, e):
     return np.kron(np.kron(np.kron(np.kron(a, b), c), d), e)
 
+def partial_trace(rho_ab):
+    tr = np.eye(3) - np.eye(3)
+    for i in range(3):
+        for j in range(3):
+            for k in range(81):
+                tr = tr + np.kron(A[i].T, B[k].T) @ rho_ab @ np.kron(A[j], B[k]) * A[i] @ A[j].T
+    return tr
+
 sps1 = []
 sps2 = []
-for PMS2 in np.arange(0.1, 1.005, 0.005):
-    PMS2 = 1
-    print(sps1)
-    sps1 = []
 
-    for t in np.arange(0,5,0.2):
-        print(t)
-        #sps1.append(PMS2)
-        sch = 0
-        for i in range(N):
+def run_circit(t, N):
+
+    fidelity = 0
+    sch = 0
+    for alf1 in np.linspace(0, 2 * np.pi, N):
+        for alf2 in np.linspace(0, np.pi, N//2):
+            sch += 1
             x = X1()
             y = Y1()
             sim = cirq.Simulator()
@@ -1164,63 +1252,33 @@ for PMS2 in np.arange(0.1, 1.005, 0.005):
             qutrits1 = []
             for j in range(5):
                 qutrits1.append(cirq.LineQid(j, dimension=3))
-            alf1 = random.randint(0,1000) / 1000 * 2 * np.pi
-            alf2 = random.randint(0,1000) / 1000 * 2 * np.pi
-            povorot = R(0, alf1, 0, 1) @ R(np.pi / 2, alf2, 0, 1)
+
+
+            povorot = R(alf1, alf2, 0, 1)
+#!
+
             pg = U(povorot)
             circuit1.append([pg(qutrits1[0])], strategy=InsertStrategy.INLINE)
+
             encoding_qubit(circuit1, qutrits1)
             time_error(circuit1, qutrits1, t)
             #circuit1.append([y(qutrits1[2])])
             decoding_qubit(circuit1, qutrits1)
-            '''
-            res1 = sim.simulate(circuit1)
-            print('88888888')
-            print('res1', res1)
-            print('88888888')
-            '''
             error_correction(circuit1, qutrits1)
-            povorot_r = R(np.pi / 2, -alf2, 0, 1) @ R(0, -alf1, 0, 1)
+
+#!
+
+            povorot_r = R(alf1, -alf2, 0, 1)
             pg_r = U(povorot_r)
             circuit1.append([pg_r(qutrits1[0])], strategy=InsertStrategy.INLINE)
 
 
 
-            circuit1.append([cirq.measure(qutrits1[0])])
+            ro_ab = cirq.final_density_matrix(circuit1, qubit_order = qutrits1)
 
-            res1 = sim.simulate(circuit1)
-            measured_bit = res1.measurements[str(qutrits1[0])][0]
-            if measured_bit == 0:
-                sch = sch + 1
+            mat_0 = partial_trace(np.array(ro_ab))
+            #print(mat_0)
+            fidelity += mat_0[0][0]
+    return fidelity / sch
 
-
-        sps1.append(sch / N)
-        print('zn', sch / N)
-
-
-print(sps1)
-'''
-fig = plt.figure(figsize=(7, 4))
-ax = fig.add_subplot()
-ax.scatter(sps1, sps2, color='b', s = 5)
-print(sps1)
-print(sps2)
-plt.show()
-'''
-# print(res1.final_state_vector)
-#res1 = sim.simulate(circuit1)
-#print(circuit1)
-#print(res1)
-'''
-[0.219, 0.203, 0.167, 0.163, 0.143, 0.152, 0.145, 0.14, 0.134, 0.109, 0.125, 0.127, 0.095]
-[0.278, 0.274, 0.208, 0.211, 0.193, 0.178, 0.161, 0.129, 0.147, 0.145, 0.151, 0.139, 0.136]
-[0.379, 0.296, 0.287, 0.252, 0.203, 0.226, 0.189, 0.2, 0.179, 0.213, 0.191, 0.203, 0.188]
-[0.453, 0.392, 0.362, 0.3, 0.311, 0.295, 0.24, 0.244, 0.245, 0.252, 0.214, 0.216, 0.231]
-[0.608, 0.54, 0.483, 0.436, 0.395, 0.34, 0.31, 0.318, 0.308, 0.287, 0.286, 0.277, 0.272]
-
-
-[1.0, 1.0, 1.0, 0.75, 0.8, 0.55, 0.55, 0.55, 0.6, 0.6, 0.45, 0.65, 0.5, 0.6, 0.3, 0.4, 0.4, 0.55, 0.65, 0.65, 0.45, 0.8, 0.5, 0.5, 0.4]
-[1.0, 1.0, 0.9, 0.8, 0.8, 0.6, 0.8, 0.85, 0.65, 0.45, 0.7, 0.45, 0.55, 0.55, 0.6, 0.5, 0.6, 0.4, 0.4, 0.5, 0.6, 0.6, 0.55, 0.5, 0.55]
-
-'''
-print('31.01.2024')
+print(run_circit(0, 4))
