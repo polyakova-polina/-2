@@ -1281,4 +1281,64 @@ def run_circit(t, N):
             fidelity += mat_0[0][0]
     return fidelity / sch
 
-print(run_circit(0, 4))
+def run_single_qudit(t, N):
+    fidelity = 0
+    sch = 0
+    for alf1 in np.linspace(0, 2 * np.pi, N):
+        for alf2 in np.linspace(0, np.pi, N//2):
+            sch += 1
+            circuit1 = cirq.Circuit()
+            qutrits1 = []
+            qutrits1.append(cirq.LineQid(0, dimension=3))
+
+            povorot = R(alf1, alf2, 0, 1)
+            # !
+
+            pg = U(povorot)
+            #circuit1.append([h(qutrits1[0])], strategy=InsertStrategy.INLINE)
+            circuit1.append([pg(qutrits1[0])], strategy=InsertStrategy.INLINE)
+
+            time_error(circuit1, qutrits1, t)
+
+            povorot_r = R(alf1, -alf2, 0, 1)
+            pg_r = U(povorot_r)
+            circuit1.append([pg_r(qutrits1[0])], strategy=InsertStrategy.INLINE)
+            #circuit1.append([h(qutrits1[0])], strategy=InsertStrategy.INLINE)
+
+            ro_ab = cirq.final_density_matrix(circuit1, qubit_order=qutrits1)
+
+
+            # print(mat_0)
+            fidelity += ro_ab[1][1]
+    return fidelity / sch
+
+def main(T, k, N):
+    code_line = []
+    single_qudit_line = []
+    for t in np.linspace(0, T, k):
+        print(t)
+        code_line.append(run_circit(t, N))
+        single_qudit_line.append(run_single_qudit(t, N))
+
+    print(code_line)
+    print(single_qudit_line)
+    fig = plt.figure(figsize=(7, 4))
+    ax = fig.add_subplot()
+    ax.scatter(np.linspace(0, T, k), single_qudit_line, color='b', s=5, label='без коррекции')
+    ax.scatter(np.linspace(0, T, k), code_line, color='r', s=5, label='c коррекции')
+
+    ax.set_xlabel('t, mcs (T0 = 25 mcs)')
+    ax.set_xlabel('fid')
+    plt.title('P1 = 1, P2 = 1')
+    plt.legend()
+    plt.grid()
+
+    plt.show()
+
+PMS1 = 1
+PMS2 = 1
+N = 4
+T = 200
+main(T, 2, N)
+
+
