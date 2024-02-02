@@ -1284,8 +1284,11 @@ def run_circit(t, N):
 def run_single_qudit(t, N):
     fidelity = 0
     sch = 0
-    for alf1 in np.linspace(0, 2 * np.pi, N):
-        for alf2 in np.linspace(0, np.pi, N//2):
+    for alf1 in np.linspace(0, np.pi, N // 2):
+        for alf2 in np.linspace(0, 2 * np.pi, N):
+            alf2 += 2 * np.pi / N / 2
+            alf1 = random.randint(0, 1000) / 1000 * 2 * np.pi
+            alf2 = random.randint(0, 1000) / 1000 * 2 * np.pi
             sch += 1
             circuit1 = cirq.Circuit()
             qutrits1 = []
@@ -1298,6 +1301,7 @@ def run_single_qudit(t, N):
             #circuit1.append([h(qutrits1[0])], strategy=InsertStrategy.INLINE)
             circuit1.append([pg(qutrits1[0])], strategy=InsertStrategy.INLINE)
 
+
             time_error(circuit1, qutrits1, t)
 
             povorot_r = R(alf1, -alf2, 0, 1)
@@ -1306,18 +1310,20 @@ def run_single_qudit(t, N):
             #circuit1.append([h(qutrits1[0])], strategy=InsertStrategy.INLINE)
 
             ro_ab = cirq.final_density_matrix(circuit1, qubit_order=qutrits1)
-
+            print(cirq.final_density_matrix(circuit1, qubit_order=qutrits1))
+            print()
 
             # print(mat_0)
-            fidelity += ro_ab[1][1]
+            fidelity += ro_ab[0][0]
     return fidelity / sch
 
 def main(T, k, N):
     code_line = []
     single_qudit_line = []
-    for t in np.linspace(0, T, k):
+    for t in np.linspace(T, T+1, 1):
         print(t)
-        code_line.append(run_circit(t, N))
+        #code_line.append(run_circit(t, N))
+        code_line.append(0.5)
         single_qudit_line.append(run_single_qudit(t, N))
 
     print(code_line)
@@ -1339,6 +1345,6 @@ PMS1 = 1
 PMS2 = 1
 N = 4
 T = 200
-main(T, 2, N)
+main(T, 1, N)
 
 
