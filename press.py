@@ -551,10 +551,27 @@ class QutritAmplitudeChannel(QuditGate):
     def _circuit_diagram_info_(self, args):
         return f"Φ(p1={self.p1:.3f})"
 
+def R(fi, hi, i=0, j=1):
+    N = 3
+    if i == j:
+        return np.eye(N)
+    if i > j:
+        i, j = j, i
+    x_for_ms = np.zeros((N, N))
+    x_for_ms[i][j] = 1
+    x_for_ms[j][i] = 1
+    y_for_ms = np.zeros((N, N))
+    y_for_ms[i][j] = -1
+    y_for_ms[j][i] = 1
+    y_for_ms = y_for_ms * 1j
+
+    m = np.cos(fi) * x_for_ms + np.sin(fi) * y_for_ms
+
+    return linalg.expm(-1j * m * hi / 2)
 
 
 
-
+'''
 def R(fi, hi, i=0, j=1):
     I = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
     x01_for_ms = np.array([[0, 1, 0],
@@ -587,7 +604,7 @@ def R(fi, hi, i=0, j=1):
     m = np.cos(fi) * x_for_ms + np.sin(fi) * y_for_ms
 
     return linalg.expm(complex(0, -1) * m * hi / 2)
-
+'''
 
 def make_ms_matrix(N, fi, hi, i, j, k, l):
     if i == j:
@@ -602,7 +619,7 @@ def make_ms_matrix(N, fi, hi, i, j, k, l):
     y_for_ms1[j][i] = 1
     y_for_ms1 = 1j * y_for_ms1
     if k == l:
-        return np.eye(N * N)
+        return
     if k > l:
         k, l = l, k
     x_for_ms2 = np.zeros((N, N))
@@ -1081,79 +1098,77 @@ q4 = qutrits1[3]
 
 alf11 = random.randint(0, 1000) / 1000 * 2 * np.pi
 alf21 = random.randint(0, 1000) / 1000 * 2 * np.pi
-alf11 = 1
-alf21 = 1
+alf11 = 0
+alf21 = 0
 povorot = R(alf11, alf21, 0, 1)
 pg = U(povorot)
 circuit1.append([pg(qutrits1[0])], strategy=InsertStrategy.INLINE)
 alf12 = random.randint(0, 1000) / 1000 * 2 * np.pi
 alf22 = random.randint(0, 1000) / 1000 * 2 * np.pi
-alf21 = 2
-alf21 = 2
+alf21 = 0
+alf21 = 0
 povorot = R(alf12, alf22, 0, 1)
 pg = U(povorot)
 circuit1.append([pg(qutrits1[1])], strategy=InsertStrategy.INLINE)
 alf13 = random.randint(0, 1000) / 1000 * 2 * np.pi
 alf23 = random.randint(0, 1000) / 1000 * 2 * np.pi
-alf13 = 3
-alf23 = 32q
+alf13 = 0
+alf23 = 0
 povorot = R(alf13, alf23, 0, 1)
 pg = U(povorot)
 circuit1.append([pg(qutrits1[2])], strategy=InsertStrategy.INLINE)
 
 
 
-
-'''
-x01 = X1()
-x12 = X12()
-circuit1.append([x01(q1)], strategy=InsertStrategy.INLINE)
-circuit1.append([x01(q2)], strategy=InsertStrategy.INLINE)
-circuit1.append([x01(q3)], strategy=InsertStrategy.INLINE)
-CCX12(circuit1,q1,q2, q3)
-res1 = sim.simulate(circuit1)
-print(res1)
-
-'''
 x01 = X1()
 x12 = X12()
 #circuit1.append([x01(q3)], strategy=InsertStrategy.INLINE)
-#2-7
+#2-19
 circuit1.append([x01(q1)], strategy=InsertStrategy.INLINE)
-CCX02(circuit1,q1,q3,q2)
-circuit1.append([x01(q1)], strategy=InsertStrategy.INLINE)
-
-#5-22
-CCX02(circuit1,q3,q2,q1)
-circuit1.append([x12(q1)], strategy=InsertStrategy.INLINE)
-CCX12(circuit1,q1,q3,q2)
-circuit1.append([x12(q1)], strategy=InsertStrategy.INLINE)
-CCX02(circuit1,q3,q2,q1)
-
-#11-19
 circuit1.append([x01(q2)], strategy=InsertStrategy.INLINE)
+CCX01(circuit1,q1,q2,q3)
+circuit1.append([x01(q1)], strategy=InsertStrategy.INLINE)
 circuit1.append([x01(q3)], strategy=InsertStrategy.INLINE)
 CCX12(circuit1,q3,q2,q1)
 circuit1.append([x01(q3)], strategy=InsertStrategy.INLINE)
+circuit1.append([x01(q1)], strategy=InsertStrategy.INLINE)
 CCX01(circuit1,q1,q2,q3)
-circuit1.append([x01(q3)], strategy=InsertStrategy.INLINE)
-CCX12(circuit1,q3,q2,q1)
 circuit1.append([x01(q2)], strategy=InsertStrategy.INLINE)
-circuit1.append([x01(q3)], strategy=InsertStrategy.INLINE)
+circuit1.append([x01(q1)], strategy=InsertStrategy.INLINE)
 
-#14-16
-CCX01(circuit1,q1,q2,q3)
-circuit1.append([x01(q3)], strategy=InsertStrategy.INLINE)
-CCX12(circuit1,q3,q1,q2)
-circuit1.append([x01(q3)], strategy=InsertStrategy.INLINE)
-CCX01(circuit1,q1,q2,q3)
-
-#circuit1.append([cirq.measure(qutrits1[2])])
 res1 = sim.simulate(circuit1)
 print(res1)
+
+
+#5-7
+circuit1.append([x01(q1)], strategy=InsertStrategy.INLINE)
+CCX01(circuit1,q1,q2,q3)
+circuit1.append([x01(q3)], strategy=InsertStrategy.INLINE)
+CCX12(circuit1,q1,q3,q2)
+circuit1.append([x01(q3)], strategy=InsertStrategy.INLINE)
+CCX01(circuit1,q1,q2,q3)
+circuit1.append([x01(q1)], strategy=InsertStrategy.INLINE)
+
+#11-13
+CCX02(circuit1,q3,q1,q2)
+circuit1.append([x12(q2)], strategy=InsertStrategy.INLINE)
+CCX01(circuit1,q1,q2,q3)
+circuit1.append([x12(q2)], strategy=InsertStrategy.INLINE)
+CCX02(circuit1,q3,q1,q2)
+
+#14-22
+CCX12(circuit1,q2,q3,q1)
+circuit1.append([x12(q1)], strategy=InsertStrategy.INLINE)
+CCX01(circuit1,q1,q2,q3)
+circuit1.append([x12(q1)], strategy=InsertStrategy.INLINE)
+CCX12(circuit1,q2,q3,q1)
+
+
+#res1 = sim.simulate(circuit1)
+#print(res1)
 #print(circuit1)
 #print(abs(cirq.final_density_matrix(circuit1, qubit_order=qutrits1)))
-#print(res1.measurements[str(qutrits1[0])][0])
+#print(res1.measurements[str(qutrits1[2])][0])
 #print(abs(partial_trace(cirq.final_density_matrix(circuit1, qubit_order=[q3,q2,q1]))))
 
 
