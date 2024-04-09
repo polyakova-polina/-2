@@ -1,0 +1,250 @@
+
+def printm(m):
+    import numpy as np
+    import cirq
+    import networkx as nx
+    print('np.array([', end='')
+    for line in m:
+        print('[', end='')
+        for i in range(len(line)-1):
+            print(line[i],',', end='')
+        print(line[i], end='')
+        print('],')
+    print('])')
+
+def get_minor(m, i, j):
+    X = np.ones(len(m)).astype(bool)
+    Y = np.ones(len(m[0])).astype(bool)
+    X[i], Y[j] = False, False
+    return m[np.ix_(X, Y)]
+import numpy as np
+import matplotlib.pyplot as plt
+from cirq.circuits import InsertStrategy
+import scipy
+from scipy import linalg
+from cirq import protocols
+from cirq.testing import gate_features
+import random
+
+def m3(g1,g2,g3):
+    return(np.kron(g1,np.kron(g2,g3)))
+
+def m2(g1, g2):
+    return(np.kron(g1,g2))
+
+def dag(matrix):
+    return np.conj(matrix.T)
+
+
+def R(fi, hi, i=0, j=1):
+    N = 3
+    if i == j:
+        return np.eye(N)
+    if i > j:
+        i, j = j, i
+    x_for_ms = np.zeros((N, N))
+    x_for_ms[i][j] = 1
+    x_for_ms[j][i] = 1
+    y_for_ms = np.zeros((N, N))
+    y_for_ms[i][j] = -1
+    y_for_ms[j][i] = 1
+    y_for_ms = y_for_ms * 1j
+
+    m = np.cos(fi) * x_for_ms + np.sin(fi) * y_for_ms
+
+    return linalg.expm(-1j * m * hi / 2)
+
+def make_ms_matrix(N, fi, hi, i, j, k, l):
+    if i == j:
+        return np.eye(N)
+    if i > j:
+        i, j = j, i
+    x_for_ms1 = np.zeros((N, N))
+    x_for_ms1[i][j] = 1
+    x_for_ms1[j][i] = 1
+    y_for_ms1 = np.zeros((N, N))
+    y_for_ms1[i][j] = -1
+    y_for_ms1[j][i] = 1
+    y_for_ms1 = 1j * y_for_ms1
+    if k == l:
+        return
+    if k > l:
+        k, l = l, k
+    x_for_ms2 = np.zeros((N, N))
+    x_for_ms2[k][l] = 1
+    x_for_ms2[l][k] = 1
+    y_for_ms2 = np.zeros((N, N))
+    y_for_ms2[k][l] = -1
+    y_for_ms2[l][k] = 1
+    y_for_ms1 = 1j * y_for_ms1
+
+    m = np.kron((np.cos(fi) * x_for_ms1 + np.sin(fi) * y_for_ms1), (np.cos(fi) * x_for_ms2 + np.sin(fi) * y_for_ms2))
+    m = -1j * m * hi
+    return linalg.expm(m)
+I = np.eye(3)
+
+u1 = np.kron(R(0, -np.pi, 1, 2), I)
+u2 = np.kron(R(np.pi / 2, np.pi / 2, 0, 1), I)
+u3 = np.kron(R(0, -np.pi, 0, 1), R(0, -np.pi, 0, 1))
+u4 = np.kron(R(np.pi / 2, -np.pi / 2, 0, 1), I)
+u5 = np.kron(R(0, np.pi, 1, 2), I)
+u1r = np.kron(I,R(0, -np.pi, 1, 2))
+u2r = np.kron(I,R(np.pi / 2, np.pi / 2, 0, 1))
+u3r = np.kron(R(0, -np.pi, 0, 1), R(0, -np.pi, 0, 1))
+
+u4r = np.kron(I,R(np.pi / 2, -np.pi / 2, 0, 1))
+u5r = np.kron(I,R(0, np.pi, 1, 2))
+xx01 = make_ms_matrix(3, 0, np.pi / 2,0,1,0,1)
+xx01r = make_ms_matrix(3, 0, np.pi / 2,0,1,0,1)
+cx = u1 @ u2 @ xx01 @ u3 @ u4 @ u5
+cx01r = u1r @ u2r @ xx01r @ u3r @ u4r @ u5r
+
+def comp_m(m):
+    real = (m + np.conj(m)) / 2
+    im = (m - np.conj(m)) / 2 * -1j
+    for i in range(len(real)):
+        for j in range(len(real)):
+            real[i][j] = np.round(real[i][j],2)
+    for i in range(len(im)):
+        for j in range(len(im)):
+            im[i][j] = np.round(im[i][j],2)
+    return real + 1j * im
+
+
+cx = u1 @ u2 @ xx01 @ u3 @ u4 @ u5
+
+ilonmask = np.array([[-1, 0, 0, 0, 0, 0, 0, 0, 0],
+ [0, -1, 0, 0, 0, 0, 0, 0, 0],
+ [0, 0, -1, 0, 0, 0, 0, 0, 0],
+ [0, 0, 0, 0, -1, 0, 0, 0, 0],
+ [0, 0, 0, -1, 0, 0, 0, 0, 0],
+ [0, 0, 0, 0, 0, -1, 0, 0, 0],
+ [0, 0, 0, 0, 0, 0, -1, 0, 0],
+ [0, 0, 0, 0, 0, 0, 0, -1, 0],
+ [0, 0, 0, 0, 0, 0, 0, 0, -1]])
+#print(ro)
+
+def make_ms(N, fi, hi, i, j, k, l):
+    ms = make_ms_matrix(N, fi, hi, i, j, k, l)
+    r1 = m2(R(0, - fi/4, 0, 1), R(np.pi / 2, - fi / 4, 0, 1))
+    r2 = m2(R(np.pi / 2, - fi/4, 0, 1), R(0, - fi / 4, 0, 1))
+    r3 = m2(R(0, - fi/2, 1, 2), R(np.pi / 2, - fi / 2, 1, 2))
+    r4 = m2(R(np.pi / 2, - fi/2, 1, 2), R(0, - fi / 2, 1, 2))
+
+    return ms@r1@r2@r3@r4
+
+def func(xx):
+
+    rs = np.eye(9)
+
+    r1 = m2(R(0, xx[0], 0,1), I)
+    r2 = m2(R(np.pi/2, xx[1], 0, 1), I)
+    r3 = m2(R(0, xx[2], 0, 2), I)
+    r4 = m2(R(np.pi / 2, xx[3], 0, 2), I)
+    r5 = m2(R(0, xx[4], 1, 2), I)
+    r6 = m2(R(np.pi / 2, xx[5], 1, 2), I)
+
+    r7 = m2(I, R(0, xx[6], 0, 1))
+    r8 = m2(I,R(np.pi / 2, xx[7], 0, 1))
+    r9 = m2(I, R(0, xx[8], 0, 2))
+    r10 = m2(I, R(np.pi / 2, xx[9], 0, 2))
+    r11 = m2(I, R(0, xx[10], 1, 2))
+    r12 = m2(I, R(np.pi / 2, xx[11], 1, 2))
+
+    ms = make_ms_matrix(3, 0, xx[12], 0, 1, 0, 1)
+    ms2 = make_ms_matrix(3, np.pi / 2, xx[13], 0, 1, 0, 1)
+
+    r14 = m2(R(0, xx[14], 0, 1), I)
+    r15 = m2(R(np.pi / 2, xx[15], 0, 1), I)
+    r16 = m2(R(0, xx[16], 0, 2), I)
+    r17 = m2(R(np.pi / 2, xx[17], 0, 2), I)
+    r18 = m2(R(0, xx[18], 1, 2), I)
+    r19 = m2(R(np.pi / 2, xx[19], 1, 2), I)
+
+    r20 = m2(I, R(0, xx[20], 0, 1))
+    r21 = m2(I, R(np.pi / 2, xx[21], 0, 1))
+    r22 = m2(I, R(0, xx[22], 0, 2))
+    r23 = m2(I, R(np.pi / 2, xx[23], 0, 2))
+    r24 = m2(I, R(0, xx[24], 1, 2))
+    r25 = m2(I, R(np.pi / 2, xx[25], 1, 2))
+
+    Ts = r1@r2@r3@r4@r5@r6@r7@r8@r9@r10@r11@r12@ms@ms2@r14@r15@r16@r17@r18@r19@r20@r21@r22@r23@r24@r25@cx
+
+    return(abs(Ts - ilonmask).sum())
+
+def func2(xx):
+
+    rs = np.eye(9)
+
+    r1 = m2(R(0, xx[0], 1,2), I)
+    r2 = m2(R(np.pi/2, xx[1], 0, 1), I)
+
+    ms = make_ms_matrix(3, 0, xx[2], 0, 1, 0, 1)
+
+    r3 = m2(R(np.pi / 2, xx[3], 0, 1), I)
+    r4 = m2(R(0, xx[4], 1, 2), I)
+
+    Ts = r1@r2@ms@r3@r4@cx
+
+    return(abs(Ts - ilonmask).sum())
+
+
+def sh_func(x):
+
+    rs = np.eye(9)
+
+    r1 = m2(R(0, x[0], 0, 1), I)
+    r2 = m2(R(np.pi / 2, x[1], 0, 1), I)
+    r3 = m2(R(0, x[2], 0, 2), I)
+    r4 = m2(R(np.pi / 2, x[3], 0, 2), I)
+    r5 = m2(R(0, x[4], 1, 2), I)
+    r6 = m2(R(np.pi / 2, x[5], 1, 2), I)
+
+    TT = r1 @ r2 @ r3 @ r4 @ r5 @ r6
+    return TT
+G_mas = []
+
+def progon(N):
+    guess = []
+    for i in range(26):
+        guess.append(0)
+        #guess.append(random.randint(-1000, 1000) / 1000 * np.pi)
+    guess = np.array(guess)
+    bnds = []
+    for i in range(26):
+        bnds.append((-np.pi, np.pi))
+    bnds = np.array(bnds)
+    key = 0
+    best_result = scipy.optimize.minimize(func, guess, bounds=bnds).fun
+
+    for _ in range(3):
+        for y in range(26):
+            for _ in range(N):
+                guess[y] = random.randint(-1000, 1000) / 1000 * np.pi
+                res1 = scipy.optimize.minimize(func, guess, bounds=bnds)
+                if res1.fun < best_result:
+                    key = guess[y]
+                    best_result = res1.fun
+            guess[y] = key
+
+    print(best_result)
+    print(guess)
+
+progon(20)
+
+def comp_m(m, par):
+    real = (m + np.conj(m)) / 2
+    im = (m - np.conj(m)) / 2 * -1j
+    for i in range(len(real)):
+        for j in range(len(real)):
+            real[i][j] = np.round(real[i][j], par)
+    for i in range(len(im)):
+        for j in range(len(im)):
+            im[i][j] = np.round(im[i][j], par)
+    return real + 1j * im
+
+
+
+
+
+
