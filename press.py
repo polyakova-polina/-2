@@ -1160,6 +1160,90 @@ class TwoQuditMSGate01_c(gate_features.TwoQubitGate
             wire_symbols=('XX0101',
                           'XX0101'))
 
+class rTwoQuditMSGate01(gate_features.TwoQubitGate
+                      ):
+
+    def _json_dict_(self):
+        return {
+            'cirq_type': self.__class__.__name__
+        }
+
+    @classmethod
+    def _from_json_dict_(cls, **kwargs):
+        return cls()
+
+    def _qid_shape_(self):
+        return (3, 3,)
+
+    def _unitary_(self):
+        matrix = make_ms_matrix(3, 0, -np.pi / 2,0,1,0,1)
+        return matrix
+
+    def num_controls(self):
+        return 2
+
+    def _circuit_diagram_info_(self, args: 'cirq.CircuitDiagramInfoArgs'
+                               ) -> 'cirq.CircuitDiagramInfo':
+        return protocols.CircuitDiagramInfo(
+            wire_symbols=('XX0101',
+                          'XX0101'))
+
+class rTwoQuditMSGate02(gate_features.TwoQubitGate
+                      ):
+
+    def _json_dict_(self):
+        return {
+            'cirq_type': self.__class__.__name__
+        }
+
+    @classmethod
+    def _from_json_dict_(cls, **kwargs):
+        return cls()
+
+    def _qid_shape_(self):
+        return (3, 3,)
+
+    def _unitary_(self):
+        matrix = make_ms_matrix(3, 0, -np.pi / 2,0,1,0,2)
+        return matrix
+
+    def num_controls(self):
+        return 2
+
+    def _circuit_diagram_info_(self, args: 'cirq.CircuitDiagramInfoArgs'
+                               ) -> 'cirq.CircuitDiagramInfo':
+        return protocols.CircuitDiagramInfo(
+            wire_symbols=('XX0101',
+                          'XX0101'))
+
+class rTwoQuditMSGate12(gate_features.TwoQubitGate
+                      ):
+
+    def _json_dict_(self):
+        return {
+            'cirq_type': self.__class__.__name__
+        }
+
+    @classmethod
+    def _from_json_dict_(cls, **kwargs):
+        return cls()
+
+    def _qid_shape_(self):
+        return (3, 3,)
+
+    def _unitary_(self):
+        matrix = make_ms_matrix(3, 0, -np.pi / 2,0,1,1,2)
+        return matrix
+
+    def num_controls(self):
+        return 2
+
+    def _circuit_diagram_info_(self, args: 'cirq.CircuitDiagramInfoArgs'
+                               ) -> 'cirq.CircuitDiagramInfo':
+        return protocols.CircuitDiagramInfo(
+            wire_symbols=('XX0101',
+                          'XX0101'))
+
 class U_press(gate_features.TwoQubitGate
               ):
 
@@ -1219,10 +1303,23 @@ def U1_clear(cirquit, q1, q2):
     # error(cirquit, [q1, q2], PMS)
     # adde(cirquit, [xx], [q1, q2], 2)
 
+def rU1_clear(cirquit, q1, q2):
+    u1 = U(R(0, np.pi, 1, 2), 'Rx(-π)12')
+    u2 = U(R(np.pi / 2, -np.pi / 2, 0, 1), 'Ry(π/2)01')
+    u6 = U(R(np.pi / 2, np.pi, 0, 2), 'Ry(-π)02')
+    xx = rTwoQuditMSGate01()
+    cirquit.append([xx(q1, q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u2(q1)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u1(q1), u6(q2)], strategy=InsertStrategy.INLINE)
+
+
+
+
 
 
 
 def U1_c_clear(cirquit, q1, q2):
+
     u1 = U(R(0, np.pi, 1, 2), 'Rx(π)12')
     u2 = U(R(np.pi / 2, -np.pi / 2, 0, 1), 'Ry(-π/2)01')
     u6 = U(R(np.pi / 2, np.pi, 0, 2), 'Ry(π)02')
@@ -1305,6 +1402,57 @@ def CX_clear12(cirquit, q1, q2):
     cirquit.append([u5(q1)], strategy=InsertStrategy.INLINE)
 
 
+def rCX_clear12(cirquit, q1, q2):
+    u1 = U(R(0, np.pi, 1, 2), 'Rx(-π)12')
+    u2 = U(R(np.pi / 2, -np.pi / 2, 0, 1), 'Ry(π/2)01')
+    u3 = U(R(0, np.pi, 0, 1), 'Rx(-π)01')
+    u35 = U(R(0, np.pi, 1, 2), 'Rx(-π)01')
+    u4 = U(R(np.pi / 2, np.pi / 2, 0, 1), 'Ry(-π/2)01')
+    u5 = U(R(0, -np.pi, 1, 2), 'Rx(π)12')
+    xx = rTwoQuditMSGate12()
+    cirquit.append([u5(q1)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u4(q1)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u3(q1)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u35(q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append([xx(q1, q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u2(q1)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u1(q1)], strategy=InsertStrategy.INLINE)
+
+def rCX_clear01(cirquit, q1, q2):
+    u1 = U(R(0, np.pi, 1, 2), 'Rx(-π)12')
+    u2 = U(R(np.pi / 2, -np.pi / 2, 0, 1), 'Ry(π/2)01')
+    u3 = U(R(0, np.pi, 0, 1), 'Rx(-π)01')
+    u35 = U(R(0, np.pi, 0, 1), 'Rx(-π)01')
+    u4 = U(R(np.pi / 2, np.pi / 2, 0, 1), 'Ry(-π/2)01')
+    u5 = U(R(0, -np.pi, 1, 2), 'Rx(π)12')
+    xx = rTwoQuditMSGate01()
+    cirquit.append([u5(q1)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u4(q1)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u3(q1)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u35(q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append([xx(q1, q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u2(q1)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u1(q1)], strategy=InsertStrategy.INLINE)
+
+def rCX_clear02(cirquit, q1, q2):
+    u1 = U(R(0, np.pi, 1, 2), 'Rx(-π)12')
+    u2 = U(R(np.pi / 2, -np.pi / 2, 0, 1), 'Ry(π/2)01')
+    u3 = U(R(0, np.pi, 0, 1), 'Rx(-π)01')
+    u35 = U(R(0, np.pi, 0, 2), 'Rx(-π)01')
+    u4 = U(R(np.pi / 2, np.pi / 2, 0, 1), 'Ry(-π/2)01')
+    u5 = U(R(0, -np.pi, 1, 2), 'Rx(π)12')
+    xx = rTwoQuditMSGate02()
+    cirquit.append([u5(q1)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u4(q1)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u3(q1)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u35(q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append([xx(q1, q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u2(q1)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u1(q1)], strategy=InsertStrategy.INLINE)
+
+
+
+
 
 
 
@@ -1312,17 +1460,32 @@ def CX_clear12(cirquit, q1, q2):
 def CCX01(cirquit, q1, q2, q3):
     U1_clear(cirquit, q1, q2)
     CX_clear01(cirquit, q2, q3)
-    U1_c_clear(cirquit, q1, q2)
+    rU1_clear(cirquit, q1, q2)
 
 def CCX02(cirquit, q1, q2, q3):
     U1_clear(cirquit, q1, q2)
     CX_clear02(cirquit, q2, q3)
-    U1_c_clear(cirquit, q1, q2)
+    rU1_clear(cirquit, q1, q2)
 
 def CCX12(cirquit, q1, q2, q3):
+    rU1_clear(cirquit, q1, q2)
+    rCX_clear12(cirquit, q2, q3)
+    rU1_clear(cirquit, q1, q2)
+
+def CCX01_r(cirquit, q1, q2, q3):
+    rU1_clear(cirquit, q1, q2)
+    rCX_clear01(cirquit, q2, q3)
     U1_clear(cirquit, q1, q2)
-    CX_clear12(cirquit, q2, q3)
-    U1_c_clear(cirquit, q1, q2)
+
+def CCX02_r(cirquit, q1, q2, q3):
+    rU1_clear(cirquit, q1, q2)
+    rCX_clear02(cirquit, q2, q3)
+    U1_clear(cirquit, q1, q2)
+
+def CCX12_r(cirquit, q1, q2, q3):
+    rU1_clear(cirquit, q1, q2)
+    rCX_clear12(cirquit, q2, q3)
+    U1_clear(cirquit, q1, q2)
 
 
 
@@ -1396,12 +1559,32 @@ class X12(cirq.Gate):
     def _circuit_diagram_info_(self, args):
         return 'X2'
 
+class X12r(cirq.Gate):
+    def _qid_shape_(self):
+        return (3,)
+
+    def _unitary_(self):
+        return R(0, -np.pi, 1, 2)
+
+    def _circuit_diagram_info_(self, args):
+        return 'X2'
+
 class X02(cirq.Gate):
     def _qid_shape_(self):
         return (3,)
 
     def _unitary_(self):
         return R(0, np.pi, 0, 2)
+
+    def _circuit_diagram_info_(self, args):
+        return 'X2'
+
+class X02r(cirq.Gate):
+    def _qid_shape_(self):
+        return (3,)
+
+    def _unitary_(self):
+        return R(0, -np.pi, 0, 2)
 
     def _circuit_diagram_info_(self, args):
         return 'X2'
@@ -1413,6 +1596,16 @@ class X1(cirq.Gate):
 
     def _unitary_(self):
         return R(0, np.pi, 0, 1)
+
+    def _circuit_diagram_info_(self, args):
+        return 'X1'
+
+class X1r(cirq.Gate):
+    def _qid_shape_(self):
+        return (3,)
+
+    def _unitary_(self):
+        return R(0, -np.pi, 0, 1)
 
     def _circuit_diagram_info_(self, args):
         return 'X1'
@@ -1497,7 +1690,7 @@ h = H()
 UNITARY = unit3()
 #circuit1.append([UNITARY(q1,q2,q3)], strategy=InsertStrategy.INLINE)
 
-
+'''
 alf11 = random.randint(0, 1000) / 1000 * 2 * np.pi
 alf21 = random.randint(0, 1000) / 1000 * 2 * np.pi
 #alf11 = 0
@@ -1519,6 +1712,12 @@ alf23 = random.randint(0, 1000) / 1000 * 2 * np.pi
 povorot = R(alf13, alf23, 0, 1)
 pg = U(povorot)
 circuit1.append([pg(qutrits1[2])], strategy=InsertStrategy.INLINE)
+'''
+x01 = X1()
+x12 = X12()
+x02 = X02()
+
+circuit1.append([x01(qutrits1[2]), x01(qutrits1[0]), x01(qutrits1[1])], strategy=InsertStrategy.INLINE)
 #q1, q3 = q3, q1
 x01 = X1()
 x12 = X12()
@@ -1561,70 +1760,53 @@ CX_clear02(circuit1,q3,q1)
 circuit1.append([x12(q3)], strategy=InsertStrategy.INLINE)
 
 circuit1.append([x01(q4)], strategy=InsertStrategy.INLINE)
-q1, q4 = q4, q1
+#q1, q4 = q4, q1
 #circuit1.append([x01(q4)], strategy=InsertStrategy.INLINE)
 
-
-
+#x12 = X12r()
+#x01 = X1r()
+#x02 = X02r()
 circuit1.append([x12(q3)], strategy=InsertStrategy.INLINE)
-CX_clear02(circuit1,q3,q1)
-CX_clear01(circuit1,q3,q1)
+rCX_clear02(circuit1,q3,q1)
+rCX_clear01(circuit1,q3,q1)
 circuit1.append([x12(q3)], strategy=InsertStrategy.INLINE)
 
 circuit1.append([x01(q1)], strategy=InsertStrategy.INLINE)
-CX_clear02(circuit1,q1,q3)
-CX_clear01(circuit1,q1,q3)
-CX_clear02(circuit1,q1,q3)
-CX_clear01(circuit1,q1,q3)
+rCX_clear02(circuit1,q1,q3)
+rCX_clear01(circuit1,q1,q3)
+rCX_clear02(circuit1,q1,q3)
+rCX_clear01(circuit1,q1,q3)
 circuit1.append([x01(q1)], strategy=InsertStrategy.INLINE)
 
 circuit1.append([x12(q2)], strategy=InsertStrategy.INLINE)
-CX_clear02(circuit1,q2,q1)
-CX_clear01(circuit1,q2,q1)
+rCX_clear02(circuit1,q2,q1)
+rCX_clear01(circuit1,q2,q1)
 circuit1.append([x12(q2)], strategy=InsertStrategy.INLINE)
 
 circuit1.append([x01(q1)], strategy=InsertStrategy.INLINE)
-CX_clear02(circuit1,q1,q2)
-CX_clear01(circuit1,q1,q2)
+rCX_clear02(circuit1,q1,q2)
+rCX_clear01(circuit1,q1,q2)
 circuit1.append([x01(q1)], strategy=InsertStrategy.INLINE)
 
 circuit1.append([x12(q1)], strategy=InsertStrategy.INLINE)
-CX_clear02(circuit1,q1,q3)
-CX_clear01(circuit1,q1,q3)
-CX_clear02(circuit1,q1,q3)
-CX_clear01(circuit1,q1,q3)
+rCX_clear02(circuit1,q1,q3)
+rCX_clear01(circuit1,q1,q3)
+rCX_clear02(circuit1,q1,q3)
+rCX_clear01(circuit1,q1,q3)
+rCX_clear02(circuit1,q1,q2)
+rCX_clear01(circuit1,q1,q2)
+rCX_clear02(circuit1,q1,q2)
+rCX_clear01(circuit1,q1,q2)
 circuit1.append([x12(q1)], strategy=InsertStrategy.INLINE)
 
 circuit1.append([x01(q2)], strategy=InsertStrategy.INLINE)
-CCX02(circuit1,q2,q3,q1)
+CCX02_r(circuit1,q2,q3,q1)
 circuit1.append([x01(q2)], strategy=InsertStrategy.INLINE)
-
-#CX_clear01(circuit1,q1,q3)
-#CX_clear02(circuit1,q1,q3)
-
-#circuit1.append([x01(q1)], strategy=InsertStrategy.INLINE)
-#CX_clear01(circuit1,q1,q2)
-#CX_clear02(circuit1,q1,q2)
-#circuit1.append([x01(q1)], strategy=InsertStrategy.INLINE)
-
-#circuit1.append([x01(q2)], strategy=InsertStrategy.INLINE)
-#CX_clear01(circuit1,q2,q1)
-#CX_clear02(circuit1,q2,q1)
-#CX_clear01(circuit1,q2,q1)
-#CX_clear02(circuit1,q2,q1)
-#circuit1.append([x01(q2)], strategy=InsertStrategy.INLINE)
-#
-
-#circuit1.append([x12(q1)], strategy=InsertStrategy.INLINE)
-#CX_clear01(circuit1,q1,q3)
-#CX_clear02(circuit1,q1,q3)
-#CX_clear01(circuit1,q1,q3)
-#CX_clear02(circuit1,q1,q3)
-#circuit1.append([x12(q1)], strategy=InsertStrategy.INLINE)
-q1, q4 = q4, q1
+'''
 povorot = R(alf11, -alf21, 0, 1)
 pg = U(povorot)
 circuit1.append([pg(qutrits1[0])], strategy=InsertStrategy.INLINE)
+#circuit1.append([pg(qutrits1[3])], strategy=InsertStrategy.INLINE)
 
 povorot = R(alf12, -alf22, 0, 1)
 pg = U(povorot)
@@ -1633,24 +1815,26 @@ circuit1.append([pg(qutrits1[1])], strategy=InsertStrategy.INLINE)
 povorot = R(alf13, -alf23, 0, 1)
 pg = U(povorot)
 circuit1.append([pg(qutrits1[2])], strategy=InsertStrategy.INLINE)
+'''
 
-
+#circuit1.append([h(qutrits1[2]), h(qutrits1[0]), h(qutrits1[1])], strategy=InsertStrategy.INLINE)
 
 
 #res1 = sim.simulate(circuit1)
-
+'''
 circuit1.append([cirq.measure(qutrits1[0])])
 circuit1.append([cirq.measure(qutrits1[1])])
 circuit1.append([cirq.measure(qutrits1[2])])
-circuit1.append([cirq.measure(qutrits1[3])])
+circuit1.append([cirq.measure(qutrits1[3])])'''
 res1 = sim.simulate(circuit1)
+'''
 print(res1.measurements[str(qutrits1[0])][0])
 print(res1.measurements[str(qutrits1[1])][0])
 print(res1.measurements[str(qutrits1[2])][0])
-print(res1.measurements[str(qutrits1[3])][0])
+print(res1.measurements[str(qutrits1[3])][0])'''
 
 #ro_ab = cirq.final_density_matrix(circuit1, qubit_order=qutrits1)
-#print(res1)
+print(res1)
 
 
 
