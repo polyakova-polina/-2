@@ -1,4 +1,3 @@
-
 import cirq
 import networkx as nx
 import numpy as np
@@ -571,128 +570,70 @@ def U1_c_clear(cirquit, q1, q2):
     cirquit.append([u1(q1), u6(q2)], strategy=InsertStrategy.INLINE)
 
 def CX_clear01(cirquit, q1, q2):
-    u1 = U(R(0, -np.pi, 1, 2), 'Rx(-π)12')
-    u2 = U(R(np.pi / 2, np.pi / 2, 0, 1), 'Ry(π/2)01')
+    u1 = U(R(np.pi/2, np.pi/2, 0, 1), 'Rx(-π)12')
+    u2 = U(R(0, - np.pi , 0, 1), 'Ry(π/2)01')
     u3 = U(R(0, -np.pi, 0, 1), 'Rx(-π)01')
     u4 = U(R(np.pi / 2, -np.pi / 2, 0, 1), 'Ry(-π/2)01')
-    u5 = U(R(0, np.pi, 1, 2), 'Rx(π)12')
     xx = TwoQuditMSGate01()
     cirquit.append([u1(q1)], strategy=InsertStrategy.INLINE)
-    cirquit.append([u2(q1)], strategy=InsertStrategy.INLINE)
     cirquit.append([xx(q1, q2)], strategy=InsertStrategy.INLINE)
-    cirquit.append([u3(q1), u3(q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u2(q1), u3(q2)], strategy=InsertStrategy.INLINE)
     cirquit.append([u4(q1)], strategy=InsertStrategy.INLINE)
-    cirquit.append([u5(q1)], strategy=InsertStrategy.INLINE)
 
 def CX_clear02(cirquit, q1, q2):
-    u1 = U(R(0, -np.pi, 1, 2), 'Rx(-π)12')
-    u2 = U(R(np.pi / 2, np.pi / 2, 0, 1), 'Ry(π/2)01')
-    u3 = U(R(0, -np.pi, 0, 1), 'Rx(-π)01')
-    u35 = U(R(0, -np.pi, 0, 2), 'Rx(-π)01')
+    u1 = U(R(np.pi / 2, np.pi / 2, 0, 1), 'Rx(-π)12')
+    u2 = U(R(0, - np.pi, 0, 1), 'Ry(π/2)01')
+    u3 = U(R(0, -np.pi, 0, 2), 'Rx(-π)01')
     u4 = U(R(np.pi / 2, -np.pi / 2, 0, 1), 'Ry(-π/2)01')
-    u5 = U(R(0, np.pi, 1, 2), 'Rx(π)12')
     xx = TwoQuditMSGate02()
     cirquit.append([u1(q1)], strategy=InsertStrategy.INLINE)
-    cirquit.append([u2(q1)], strategy=InsertStrategy.INLINE)
     cirquit.append([xx(q1, q2)], strategy=InsertStrategy.INLINE)
-    cirquit.append([u3(q1)], strategy=InsertStrategy.INLINE)
-    cirquit.append([u35(q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u2(q1), u3(q2)], strategy=InsertStrategy.INLINE)
     cirquit.append([u4(q1)], strategy=InsertStrategy.INLINE)
-    cirquit.append([u5(q1)], strategy=InsertStrategy.INLINE)
 
 def CX_clear12(cirquit, q1, q2):
-    u1 = U(R(0, -np.pi, 1, 2), 'Rx(-π)12')
-    u2 = U(R(np.pi / 2, np.pi / 2, 0, 1), 'Ry(π/2)01')
-    u3 = U(R(0, -np.pi, 0, 1), 'Rx(-π)01')
-    u35 = U(R(0, -np.pi, 1, 2), 'Rx(-π)01')
+    u1 = U(R(np.pi / 2, np.pi / 2, 0, 1), 'Rx(-π)12')
+    u2 = U(R(0, - np.pi, 0, 1), 'Ry(π/2)01')
+    u3 = U(R(0, -np.pi, 1, 2), 'Rx(-π)01')
     u4 = U(R(np.pi / 2, -np.pi / 2, 0, 1), 'Ry(-π/2)01')
-    u5 = U(R(0, np.pi, 1, 2), 'Rx(π)12')
     xx = TwoQuditMSGate12()
     cirquit.append([u1(q1)], strategy=InsertStrategy.INLINE)
-    cirquit.append([u2(q1)], strategy=InsertStrategy.INLINE)
     cirquit.append([xx(q1, q2)], strategy=InsertStrategy.INLINE)
-    cirquit.append([u3(q1)], strategy=InsertStrategy.INLINE)
-    cirquit.append([u35(q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u2(q1), u3(q2)], strategy=InsertStrategy.INLINE)
     cirquit.append([u4(q1)], strategy=InsertStrategy.INLINE)
-    cirquit.append([u5(q1)], strategy=InsertStrategy.INLINE)
 
 def rCX_clear12(cirquit, q1, q2):
-    u1 = U(R(0, np.pi, 1, 2), 'Rx(-π)12')
-    u2 = U(R(np.pi / 2, -np.pi / 2, 0, 1), 'Ry(π/2)01')
-    u3 = U(R(0, np.pi, 0, 1), 'Rx(-π)01')
-    u35 = U(R(0, np.pi, 1, 2), 'Rx(-π)01')
+    u1 = U(R(np.pi / 2, - np.pi / 2, 0, 1), 'Rx(-π)12')
+    u2 = U(R(0, np.pi, 0, 1), 'Ry(π/2)01')
+    u3 = U(R(0, np.pi, 1, 2), 'Rx(-π)01')
     u4 = U(R(np.pi / 2, np.pi / 2, 0, 1), 'Ry(-π/2)01')
-    u5 = U(R(0, -np.pi, 1, 2), 'Rx(π)12')
     xx = rTwoQuditMSGate12()
-    cirquit.append([u5(q1)], strategy=InsertStrategy.INLINE)
     cirquit.append([u4(q1)], strategy=InsertStrategy.INLINE)
-    cirquit.append([u3(q1)], strategy=InsertStrategy.INLINE)
-    cirquit.append([u35(q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u2(q1), u3(q2)], strategy=InsertStrategy.INLINE)
     cirquit.append([xx(q1, q2)], strategy=InsertStrategy.INLINE)
-    cirquit.append([u2(q1)], strategy=InsertStrategy.INLINE)
     cirquit.append([u1(q1)], strategy=InsertStrategy.INLINE)
 
 def rCX_clear01(cirquit, q1, q2):
-    u1 = U(R(0, np.pi, 1, 2), 'Rx(-π)12')
-    u2 = U(R(np.pi / 2, -np.pi / 2, 0, 1), 'Ry(π/2)01')
+    u1 = U(R(np.pi/2, - np.pi / 2, 0, 1), 'Rx(-π)12')
+    u2 = U(R(0, np.pi, 0, 1), 'Ry(π/2)01')
     u3 = U(R(0, np.pi, 0, 1), 'Rx(-π)01')
-    u35 = U(R(0, np.pi, 0, 1), 'Rx(-π)01')
     u4 = U(R(np.pi / 2, np.pi / 2, 0, 1), 'Ry(-π/2)01')
-    u5 = U(R(0, -np.pi, 1, 2), 'Rx(π)12')
     xx = rTwoQuditMSGate01()
-    cirquit.append([u5(q1)], strategy=InsertStrategy.INLINE)
     cirquit.append([u4(q1)], strategy=InsertStrategy.INLINE)
-    cirquit.append([u3(q1)], strategy=InsertStrategy.INLINE)
-    cirquit.append([u35(q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u2(q1), u3(q2)], strategy=InsertStrategy.INLINE)
     cirquit.append([xx(q1, q2)], strategy=InsertStrategy.INLINE)
-    cirquit.append([u2(q1)], strategy=InsertStrategy.INLINE)
     cirquit.append([u1(q1)], strategy=InsertStrategy.INLINE)
 
 def rCX_clear02(cirquit, q1, q2):
-    u1 = U(R(0, np.pi, 1, 2), 'Rx(-π)12')
-    u2 = U(R(np.pi / 2, -np.pi / 2, 0, 1), 'Ry(π/2)01')
-    u3 = U(R(0, np.pi, 0, 1), 'Rx(-π)01')
-    u35 = U(R(0, np.pi, 0, 2), 'Rx(-π)01')
+    u1 = U(R(np.pi / 2, - np.pi / 2, 0, 1), 'Rx(-π)12')
+    u2 = U(R(0, np.pi, 0, 1), 'Ry(π/2)01')
+    u3 = U(R(0, np.pi, 0, 2), 'Rx(-π)01')
     u4 = U(R(np.pi / 2, np.pi / 2, 0, 1), 'Ry(-π/2)01')
-    u5 = U(R(0, -np.pi, 1, 2), 'Rx(π)12')
     xx = rTwoQuditMSGate02()
-    cirquit.append([u5(q1)], strategy=InsertStrategy.INLINE)
     cirquit.append([u4(q1)], strategy=InsertStrategy.INLINE)
-    cirquit.append([u3(q1)], strategy=InsertStrategy.INLINE)
-    cirquit.append([u35(q2)], strategy=InsertStrategy.INLINE)
+    cirquit.append([u2(q1), u3(q2)], strategy=InsertStrategy.INLINE)
     cirquit.append([xx(q1, q2)], strategy=InsertStrategy.INLINE)
-    cirquit.append([u2(q1)], strategy=InsertStrategy.INLINE)
     cirquit.append([u1(q1)], strategy=InsertStrategy.INLINE)
-
-def CCX01(cirquit, q1, q2, q3):
-    U1_clear(cirquit, q1, q2)
-    CX_clear01(cirquit, q2, q3)
-    rU1_clear(cirquit, q1, q2)
-
-def CCX02(cirquit, q1, q2, q3):
-    U1_clear(cirquit, q1, q2)
-    CX_clear02(cirquit, q2, q3)
-    rU1_clear(cirquit, q1, q2)
-
-def CCX12(cirquit, q1, q2, q3):
-    rU1_clear(cirquit, q1, q2)
-    rCX_clear12(cirquit, q2, q3)
-    rU1_clear(cirquit, q1, q2)
-
-def CCX01_r(cirquit, q1, q2, q3):
-    U1_clear(cirquit, q1, q2)
-    rCX_clear01(cirquit, q2, q3)
-    rU1_clear(cirquit, q1, q2)
-
-def CCX02_r(cirquit, q1, q2, q3):
-    U1_clear(cirquit, q1, q2)
-    rCX_clear02(cirquit, q2, q3)
-    rU1_clear(cirquit, q1, q2)
-
-def CCX12_r(cirquit, q1, q2, q3):
-    U1_clear(cirquit, q1, q2)
-    rCX_clear12(cirquit, q2, q3)
-    rU1_clear(cirquit, q1, q2)
 
 class H(cirq.Gate):
     def _qid_shape_(self):
@@ -808,6 +749,18 @@ class X1r(cirq.Gate):
         return 'X1'
 
 
+class Hr(cirq.Gate):
+    def _qid_shape_(self):
+        return (3,)
+
+    def _unitary_(self):
+        return R(np.pi / 2, -np.pi / 2, 0, 1) @ R(0, -np.pi, 0, 1)
+
+    def _circuit_diagram_info_(self, args):
+        return 'U_enc'
+
+
+
 def decoding(circuit1, q1,q2,q3):
     rCX_clear01(circuit1, q2, q1)
     circuit1.append([x12(q2)], strategy=InsertStrategy.INLINE)
@@ -830,7 +783,6 @@ def encoding(circuit1, q1,q2,q3):
     CX_clear02(circuit1, q1, q2)
     circuit1.append([x12(q2)], strategy=InsertStrategy.INLINE)
     CX_clear01(circuit1, q2, q1)
-
 
 zZ = np.array([[1,0,0]]).T
 eE = np.array([[0,1,0]]).T
@@ -869,12 +821,12 @@ x12 = X12()
 h = H()
 
 # cмена нач сост:
-circuit1.append([h(q1)], strategy=InsertStrategy.INLINE)
-circuit1.append([h(q2)], strategy=InsertStrategy.INLINE)
-circuit1.append([h(q3)], strategy=InsertStrategy.INLINE)
-CX_clear01(circuit1, q1, q5)
-CX_clear01(circuit1, q1, q6)
-CX_clear01(circuit1, q1, q7)
+circuit1.append([h(q5)], strategy=InsertStrategy.INLINE)
+circuit1.append([h(q6)], strategy=InsertStrategy.INLINE)
+circuit1.append([h(q7)], strategy=InsertStrategy.INLINE)
+CX_clear01(circuit1, q5, q1)
+CX_clear01(circuit1, q6, q2)
+CX_clear01(circuit1, q7, q3)
 
 
 
@@ -882,6 +834,7 @@ CX_clear01(circuit1, q1, q7)
 x01 = X1()
 x12 = X12()
 x02 = X02()
+hr = Hr()
 
 encoding(circuit1, q1,q2,q3)
 
@@ -891,13 +844,13 @@ q1, q4 = q4, q1
 decoding(circuit1, q1, q2, q3)
 
 
-rCX_clear01(circuit1, q1, q7)
-rCX_clear01(circuit1, q1, q6)
-rCX_clear01(circuit1, q1, q5)
-circuit1.append([h(q1)], strategy=InsertStrategy.INLINE)
-circuit1.append([h(q2)], strategy=InsertStrategy.INLINE)
-circuit1.append([h(q3)], strategy=InsertStrategy.INLINE)
 
+CX_clear01(circuit1, q5, q1)
+CX_clear01(circuit1, q6, q2)
+CX_clear01(circuit1, q7, q3)
+circuit1.append([h(q5)], strategy=InsertStrategy.INLINE)
+circuit1.append([h(q6)], strategy=InsertStrategy.INLINE)
+circuit1.append([h(q7)], strategy=InsertStrategy.INLINE)
 
 res1 = sim.simulate(circuit1)
 ro_ab = cirq.final_density_matrix(circuit1, qubit_order=qutrits1)
