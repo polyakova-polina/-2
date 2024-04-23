@@ -836,17 +836,19 @@ class Hr(cirq.Gate):
 
 def encoding(cirquit, mask, q_mask, v):
     for o in range(B):
-        u1 = U(R(v[0 + o * 12], v[0 + o * 12], mask[o][0], mask[o][1]), 'Rx(-π)12')
-        u2 = U(R(v[0 + o * 12], v[0 + o * 12], mask[o][0], mask[o][1]), 'Ry(π/2)01')
-        u3 = U(R(v[0 + o * 12], v[0 + o * 12], mask[o][0], mask[o][1]), 'Rx(-π)01')
-        u4 = U(R(v[0 + o * 12], v[0 + o * 12], mask[o][2], mask[o][3]), 'Ry(-π/2)01')
-        u5 = U(R(v[0 + o * 12], v[0 + o * 12], mask[o][2], mask[o][3]), 'Rx(-π)01')
-        u6 = U(R(v[0 + o * 12], v[0 + o * 12], mask[o][2], mask[o][3]), 'Ry(-π/2)01')
+        u1 = U(R(v[0 + o * 12], v[1 + o * 12], mask[o][0], mask[o][1]), 'Rx(-π)12')
+        u2 = U(R(v[2 + o * 12], v[3 + o * 12], mask[o][0], mask[o][1]), 'Ry(π/2)01')
+        u3 = U(R(v[4 + o * 12], v[5 + o * 12], mask[o][0], mask[o][1]), 'Rx(-π)01')
+        u4 = U(R(v[6 + o * 12], v[7 + o * 12], mask[o][2], mask[o][3]), 'Ry(-π/2)01')
+        u5 = U(R(v[8 + o * 12], v[9 + o * 12], mask[o][2], mask[o][3]), 'Rx(-π)01')
+        u6 = U(R(v[10 + o * 12], v[11 + o * 12], mask[o][2], mask[o][3]), 'Ry(-π/2)01')
         xx = TwoQS([mask[o][0], mask[o][1], mask[o][2], mask[o][3]])
         cirquit.append([u1(q_mask[o][0]), u4(q_mask[o][1])], strategy=InsertStrategy.INLINE)
         cirquit.append([xx(q_mask[o][0], q_mask[o][1])], strategy=InsertStrategy.INLINE)
         cirquit.append([u2(q_mask[o][0]), u5(q_mask[o][1])], strategy=InsertStrategy.INLINE)
         cirquit.append([u3(q_mask[o][0]), u6(q_mask[o][1])], strategy=InsertStrategy.INLINE)
+
+        #([np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0])
 
 
 
@@ -854,12 +856,12 @@ def encoding(cirquit, mask, q_mask, v):
 
 def decoding(cirquit, mask, q_mask, v):
     for o in range(B-1,-1,-1):
-        u1 = U(R(v[0 + o * 12], -v[0 + o * 12], mask[o][0], mask[o][1]), 'Rx(-π)12')
-        u2 = U(R(v[0 + o * 12], -v[0 + o * 12], mask[o][0], mask[o][1]), 'Ry(π/2)01')
-        u3 = U(R(v[0 + o * 12], -v[0 + o * 12], mask[o][0], mask[o][1]), 'Rx(-π)01')
-        u4 = U(R(v[0 + o * 12], -v[0 + o * 12], mask[o][2], mask[o][3]), 'Ry(-π/2)01')
-        u5 = U(R(v[0 + o * 12], -v[0 + o * 12], mask[o][2], mask[o][3]), 'Rx(-π)01')
-        u6 = U(R(v[0 + o * 12], -v[0 + o * 12], mask[o][2], mask[o][3]), 'Ry(-π/2)01')
+        u1 = U(R(v[0 + o * 12], -v[1 + o * 12], mask[o][0], mask[o][1]), 'Rx(-π)12')
+        u2 = U(R(v[2 + o * 12], -v[3 + o * 12], mask[o][0], mask[o][1]), 'Ry(π/2)01')
+        u3 = U(R(v[4 + o * 12], -v[5 + o * 12], mask[o][0], mask[o][1]), 'Rx(-π)01')
+        u4 = U(R(v[6 + o * 12], -v[7 + o * 12], mask[o][2], mask[o][3]), 'Ry(-π/2)01')
+        u5 = U(R(v[8 + o * 12], -v[9 + o * 12], mask[o][2], mask[o][3]), 'Rx(-π)01')
+        u6 = U(R(v[10 + o * 12], -v[11 + o * 12], mask[o][2], mask[o][3]), 'Ry(-π/2)01')
         xx = rTwoQS([mask[o][0], mask[o][1], mask[o][2], mask[o][3]])
         cirquit.append([u3(q_mask[o][0]), u6(q_mask[o][1])], strategy=InsertStrategy.INLINE)
         cirquit.append([u2(q_mask[o][0]), u5(q_mask[o][1])], strategy=InsertStrategy.INLINE)
@@ -893,46 +895,52 @@ def operation(v):
     qutrits1.append(cirq.LineQid(1, dimension=3))
     qutrits1.append(cirq.LineQid(2, dimension=3))
     qutrits1.append(cirq.LineQid(3, dimension=3))
-    qutrits1.append(cirq.LineQid(4, dimension=3))
-    qutrits1.append(cirq.LineQid(5, dimension=3))
-    qutrits1.append(cirq.LineQid(6, dimension=3))
+    #qutrits1.append(cirq.LineQid(4, dimension=3))
+    #qutrits1.append(cirq.LineQid(5, dimension=3))
+    #qutrits1.append(cirq.LineQid(6, dimension=3))
     q1, q2, q3= qutrits1[0], qutrits1[1], qutrits1[2]
     q4 = qutrits1[3]
-    q5, q6, q7 = qutrits1[4], qutrits1[5], qutrits1[6]
+    #q5, q6, q7 = qutrits1[4], qutrits1[5], qutrits1[6]
 
-    Q_mask = [(q1,q3), (q3,q1), (q2,q3), (q3,q2), (q1,q2)]
-    mask = [(0,1,0,2), (0,2,0,1), (0,1,1,2), (0,2,0,1), (0,1,0,2)]
+    Q_mask = [(q1,q3), (q3,q1), (q2,q3), (q3,q2), (q1,q2), (q2,q1)]
+    mask = [(0,2,0,2), (0,1,0,1), (0,2,1,2),(0,1,0,1), (0,2,0,2), (0,1,0,1)]
 
     # cмена нач сост:
-    circuit1.append([h(q5)], strategy=InsertStrategy.INLINE)
-    circuit1.append([h(q6)], strategy=InsertStrategy.INLINE)
-    circuit1.append([h(q7)], strategy=InsertStrategy.INLINE)
-    CX_clear01(circuit1, q5, q1)
-    CX_clear01(circuit1, q6, q2)
-    CX_clear01(circuit1, q7, q3)
+    circuit1.append([h(q1)], strategy=InsertStrategy.INLINE)
+    circuit1.append([h(q2)], strategy=InsertStrategy.INLINE)
+    circuit1.append([h(q3)], strategy=InsertStrategy.INLINE)
+    #CX_clear01(circuit1, q5, q1)
+    #CX_clear01(circuit1, q6, q2)
+    #CX_clear01(circuit1, q7, q3)
 
     encoding(circuit1, mask, Q_mask, v)
     #q1, q4 = q4, q1
-    Q_mask = [(q4, q3), (q3, q4), (q2, q3), (q3, q2), (q4, q2)]
+    Q_mask = [(q4, q3), (q3, q4), (q2, q3), (q3,q2), (q4, q2), (q2,q4)]
     decoding(circuit1, mask, Q_mask, v)
 
-    CX_clear01(circuit1, q5, q4)
-    CX_clear01(circuit1, q6, q2)
-    CX_clear01(circuit1, q7, q3)
-    circuit1.append([h(q5)], strategy=InsertStrategy.INLINE)
-    circuit1.append([h(q6)], strategy=InsertStrategy.INLINE)
-    circuit1.append([h(q7)], strategy=InsertStrategy.INLINE)
+    #CX_clear01(circuit1, q5, q4)
+    #CX_clear01(circuit1, q6, q2)
+    #CX_clear01(circuit1, q7, q3)
+    circuit1.append([hr(q3)], strategy=InsertStrategy.INLINE)
+    circuit1.append([hr(q2)], strategy=InsertStrategy.INLINE)
+    circuit1.append([hr(q4)], strategy=InsertStrategy.INLINE)
 
     ro_ab = cirq.final_density_matrix(circuit1, qubit_order=qutrits1)
     return abs(ro_ab[0][0] - 1)
 
-B = 5
-guess =[]
-for i in range(60):
-    guess.append(0)
+B = 6
+guess =np.array([np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0,np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0,np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0,np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0,np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0,np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0])
+'''
+for i in range(72):
+    #guess.append(random.randint(-1000, 1000) / 1000 * np.pi)
+    guess.append(0.2)
+guess = np.array(guess)
+'''
+
 bnds = []
-for i in range(60):
+for i in range(72):
     bnds.append((-np.pi, np.pi))
 
 res1 = scipy.optimize.minimize(operation, guess, bounds=bnds)
 print(res1)
+print(res1.x)
