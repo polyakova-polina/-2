@@ -902,8 +902,8 @@ def operation(v):
     q4 = qutrits1[3]
     #q5, q6, q7 = qutrits1[4], qutrits1[5], qutrits1[6]
 
-    Q_mask = [(q1,q3), (q3,q1), (q2,q3), (q3,q2), (q1,q2), (q2,q1)]
-    mask = [(0,2,0,2), (0,1,0,1), (0,2,1,2),(0,1,0,1), (0,2,0,2), (0,1,0,1)]
+    Q_mask = [(q1,q3), (q3,q1), (q2,q3), (q3,q2), (q1,q2)]
+    mask = [(0,2,0,2), (0,1,0,1), (0,2,1,2),(0,1,0,1), (0,2,0,2)]
 
     # cмена нач сост:
     circuit1.append([h(q1)], strategy=InsertStrategy.INLINE)
@@ -915,7 +915,7 @@ def operation(v):
 
     encoding(circuit1, mask, Q_mask, v)
     #q1, q4 = q4, q1
-    Q_mask = [(q4, q3), (q3, q4), (q2, q3), (q3,q2), (q4, q2), (q2,q4)]
+    Q_mask = [(q4, q3), (q3, q4), (q2, q3), (q3,q2), (q4, q2)]
     decoding(circuit1, mask, Q_mask, v)
 
     #CX_clear01(circuit1, q5, q4)
@@ -928,8 +928,8 @@ def operation(v):
     ro_ab = cirq.final_density_matrix(circuit1, qubit_order=qutrits1)
     return abs(ro_ab[0][0] - 1)
 
-B = 6
-guess =np.array([np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0,np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0,np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0,np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0,np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0,np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0])
+B = 5
+guess =np.array([np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0,np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0,np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0,np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0,np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0])
 '''
 for i in range(72):
     #guess.append(random.randint(-1000, 1000) / 1000 * np.pi)
@@ -938,7 +938,7 @@ guess = np.array(guess)
 '''
 
 bnds = []
-for i in range(72):
+for i in range(60):
     bnds.append((-np.pi, np.pi))
 
 res1 = scipy.optimize.minimize(operation, guess, bounds=bnds)
