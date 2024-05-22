@@ -965,11 +965,12 @@ def operation(v):
 
                 '''
                 ro_ab = cirq.final_state_vector(circuit1, qubit_order=qutrits1)
-                ans += abs(ro_ab[9:][9:]).sum()/8
-                plotus.append(ans)
+                ans += abs((ro_ab[9:] * np.conj(ro_ab[9:])).sum())
 
-    print(ans, v[0], v[10])
-    return ans
+    plotus.append(ans/8)
+    print(ans / 8)
+    #print(ans, v[0], v[10])
+    return ans / 8
 
 B = 6
 
@@ -984,6 +985,7 @@ for i in range(12):
     guess[i] = guess[i] + random.randint(-1000, 1000) / 1000 * delta
 # guess.append(0.2)
 guess = np.array(guess)
+#gguess = guess
 #guess = np.zeros_like(guess)
 print(operation(guess))
 #guess = [1.6542963267948965, 1.1982963267948965, 0.292, -2.9345926535897933, 1.7542963267948966, -1.9407963267948967, -0.4065, -0.477, 0.1035, -3.141592653589793, 0.2575001554317605, 0.2900001536802453, 1.4622963254144614, 1.9157963254144614, 0.09650016410849752, -3.141592653589793, 2.0707963267948966, -1.3817960830169056, 0.205, 0.125, 0.37949999861956496, -2.738592653589793, 0.1045, -0.3745, 1.4257963267948965, 2.0247963267948967, 0.405000147482576, -2.851592653589793, 1.9152963267948966, -1.9497963267948966, -0.145, 0.483, 0.4935, -3.141592653589793, 0.0225, -0.007000000000000009, 1.1577963267948965, 1.5392963267948965, -0.11200000138043503, -2.862592653589793, 1.2257963267948966, -1.6297963281753316, -0.331, 0.49599999861956495, 0.4075, -2.885592653589793, -0.389, 0.407, 1.7212963254144615, 1.9642963267948965, -0.456, -2.9910926522093577, 1.5942963281753315, -1.6907963267948967, -0.2555, 0.4705, 0.42500000138043503, -3.122592653589793, -0.38949999861956497, 0.2985]
@@ -1022,7 +1024,9 @@ for i in range(12):
 #res1 = scipy.optimize.differential_evolution(operation, bounds=bnds, maxiter=10, popsize=10)
 res1 = scipy.optimize.minimize(operation, guess, method= 'COBYLA', bounds=bnds)
 print(res1)
-print(res1.x)
+print(list(res1.x))
+print()
+print(guess)
 plx = np.arange(0, len(plotus))
 plt.scatter(plx, plotus, s = 5)
 plt.show()
