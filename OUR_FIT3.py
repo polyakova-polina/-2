@@ -836,13 +836,13 @@ class Hr(cirq.Gate):
 
 def encoding(cirquit, mask, q_mask, v):
     for o in range(B):
-
-        u1 = U(R(v[0 + o * 12], v[1 + o * 12], mask[o][0], mask[o][1]), 'Rx(-π)12')
-        u2 = U(R(v[2 + o * 12], v[3 + o * 12], mask[o][0], mask[o][1]), 'Ry(π/2)01')
-        u3 = U(R(v[4 + o * 12], v[5 + o * 12], mask[o][0], mask[o][1]), 'Rx(-π)01')
-        u4 = U(R(v[6 + o * 12], v[7 + o * 12], mask[o][2], mask[o][3]), 'Ry(-π/2)01')
-        u5 = U(R(v[8 + o * 12], v[9 + o * 12], mask[o][2], mask[o][3]), 'Rx(-π)01')
-        u6 = U(R(v[10 + o * 12], v[11 + o * 12], mask[o][2], mask[o][3]), 'Ry(-π/2)01')
+        dln = 12
+        u1 = U(R(v[0 + o * dln], v[1 + o * dln], mask[o][0], mask[o][1]), 'Rx(-π)12')
+        u2 = U(R(v[2 + o * dln], v[3 + o * dln], mask[o][0], mask[o][1]), 'Ry(π/2)01')
+        u3 = U(R(v[4 + o * dln], v[5 + o * dln], mask[o][0], mask[o][1]), 'Rx(-π)01')
+        u4 = U(R(v[6 + o * dln], v[7 + o * dln], mask[o][2], mask[o][3]), 'Ry(-π/2)01')
+        u5 = U(R(v[8 + o * dln], v[9 + o * dln], mask[o][2], mask[o][3]), 'Rx(-π)01')
+        u6 = U(R(v[10 + o * dln], v[11 + o * dln], mask[o][2], mask[o][3]), 'Ry(-π/2)01')
         xx = TwoQS([mask[o][0], mask[o][1], mask[o][2], mask[o][3]])
         cirquit.append([u1(q_mask[o][0]), u4(q_mask[o][1])], strategy=InsertStrategy.INLINE)
         cirquit.append([xx(q_mask[o][0], q_mask[o][1])], strategy=InsertStrategy.INLINE)
@@ -861,13 +861,13 @@ def unitary3():
 
 def decoding(cirquit, mask, q_mask, v):
     for o in range(B-1,-1,-1):
-
-        u1 = U(R(v[0 + o * 12], -v[1 + o * 12], mask[o][0], mask[o][1]), 'Rx(-π)12')
-        u2 = U(R(v[2 + o * 12], -v[3 + o * 12], mask[o][0], mask[o][1]), 'Ry(π/2)01')
-        u3 = U(R(v[4 + o * 12], -v[5 + o * 12], mask[o][0], mask[o][1]), 'Rx(-π)01')
-        u4 = U(R(v[6 + o * 12], -v[7 + o * 12], mask[o][2], mask[o][3]), 'Ry(-π/2)01')
-        u5 = U(R(v[8 + o * 12], -v[9 + o * 12], mask[o][2], mask[o][3]), 'Rx(-π)01')
-        u6 = U(R(v[10 + o * 12], -v[11 + o * 12], mask[o][2], mask[o][3]), 'Ry(-π/2)01')
+        dln = 12
+        u1 = U(R(v[0 + o * dln], -v[1 + o * dln], mask[o][0], mask[o][1]), 'Rx(-π)12')
+        u2 = U(R(v[2 + o * dln], -v[3 + o * dln], mask[o][0], mask[o][1]), 'Ry(π/2)01')
+        u3 = U(R(v[4 + o * dln], -v[5 + o * dln], mask[o][0], mask[o][1]), 'Rx(-π)01')
+        u4 = U(R(v[6 + o * dln], -v[7 + o * dln], mask[o][2], mask[o][3]), 'Ry(-π/2)01')
+        u5 = U(R(v[8 + o * dln], -v[9 + o * dln], mask[o][2], mask[o][3]), 'Rx(-π)01')
+        u6 = U(R(v[10 + o * dln], -v[11 + o * dln], mask[o][2], mask[o][3]), 'Ry(-π/2)01')
         xx = rTwoQS([mask[o][0], mask[o][1], mask[o][2], mask[o][3]])
         cirquit.append([u3(q_mask[o][0]), u6(q_mask[o][1])], strategy=InsertStrategy.INLINE)
         cirquit.append([u2(q_mask[o][0]), u5(q_mask[o][1])], strategy=InsertStrategy.INLINE)
@@ -980,7 +980,7 @@ guess =np.array([np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -
 guess =np.array([np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0,np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0,np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0,np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0,np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0,np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0])
 
 guess = guess[0:12]
-delta = np.pi
+delta = 2 *np.pi
 for i in range(12):
     guess[i] = guess[i] + random.randint(-1000, 1000) / 1000 * delta
 # guess.append(0.2)
