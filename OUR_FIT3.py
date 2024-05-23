@@ -847,7 +847,7 @@ def encoding(cirquit, mask, q_mask, v):
         cirquit.append([u1(q_mask[o][0]), u4(q_mask[o][1])], strategy=InsertStrategy.INLINE)
         cirquit.append([xx(q_mask[o][0], q_mask[o][1])], strategy=InsertStrategy.INLINE)
         cirquit.append([u2(q_mask[o][0]), u5(q_mask[o][1])], strategy=InsertStrategy.INLINE)
-        cirquit.append([u3(q_mask[o][0]), u6(q_mask[o][1])], strategy=InsertStrategy.INLINE)
+        #cirquit.append([u3(q_mask[o][0]), u6(q_mask[o][1])], strategy=InsertStrategy.INLINE)
 
         #([np.pi / 2, np.pi / 2,0,-np.pi, np.pi / 2, -np.pi / 2, 0, 0,0, -np.pi, 0, 0])
 
@@ -869,7 +869,7 @@ def decoding(cirquit, mask, q_mask, v):
         u5 = U(R(v[8 + o * dln], -v[9 + o * dln], mask[o][2], mask[o][3]), 'Rx(-π)01')
         u6 = U(R(v[10 + o * dln], -v[11 + o * dln], mask[o][2], mask[o][3]), 'Ry(-π/2)01')
         xx = rTwoQS([mask[o][0], mask[o][1], mask[o][2], mask[o][3]])
-        cirquit.append([u3(q_mask[o][0]), u6(q_mask[o][1])], strategy=InsertStrategy.INLINE)
+       # cirquit.append([u3(q_mask[o][0]), u6(q_mask[o][1])], strategy=InsertStrategy.INLINE)
         cirquit.append([u2(q_mask[o][0]), u5(q_mask[o][1])], strategy=InsertStrategy.INLINE)
         cirquit.append([xx(q_mask[o][0], q_mask[o][1])], strategy=InsertStrategy.INLINE)
         cirquit.append([u1(q_mask[o][0]), u4(q_mask[o][1])], strategy=InsertStrategy.INLINE)
