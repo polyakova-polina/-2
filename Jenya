@@ -11,6 +11,7 @@ import random
 
 
 # Функции нативных гейтов
+
 def R(fi, hi, i=0, j=1):
     N = 3
     if i == j:
@@ -29,9 +30,8 @@ def R(fi, hi, i=0, j=1):
 
     return linalg.expm(-1j * m * hi / 2)
 def make_ms_matrix(N, fi, hi, i, j, k, l):
-
     if i == j:
-        return
+        return np.eye(N)
     if i > j:
         i, j = j, i
     x_for_ms1 = np.zeros((N, N))
@@ -54,10 +54,8 @@ def make_ms_matrix(N, fi, hi, i, j, k, l):
     y_for_ms1 = 1j * y_for_ms1
 
     m = np.kron((np.cos(fi) * x_for_ms1 + np.sin(fi) * y_for_ms1), (np.cos(fi) * x_for_ms2 + np.sin(fi) * y_for_ms2))
-
-    m = -1j * m * hi / 2
+    m = -1j * m * hi
     return linalg.expm(m)
-
 
 # Класс для создания двухкудитных гейтов
 class TwoQuditMSGate01(gate_features.TwoQubitGate
@@ -87,6 +85,7 @@ class TwoQuditMSGate01(gate_features.TwoQubitGate
         return protocols.CircuitDiagramInfo(
             wire_symbols=('XX0101',
                           'XX0101'))
+
 
 class rTwoQuditMSGate01(gate_features.TwoQubitGate
                       ):
@@ -167,7 +166,7 @@ class X02(cirq.Gate):
         return (3,)
 
     def _unitary_(self):
-        return R(0, np.pi, 0, 1)
+        return R(0, np.pi, 0, 2)
 
     def _circuit_diagram_info_(self, args):
         return 'X02'
@@ -202,7 +201,7 @@ def encoding(circuit1, q1,q2,q3):
     ###1)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
-    circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x01(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
 
@@ -210,7 +209,7 @@ def encoding(circuit1, q1,q2,q3):
 
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
-    circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x01(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
 
@@ -218,7 +217,7 @@ def encoding(circuit1, q1,q2,q3):
 
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
-    circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x01(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
 
@@ -226,7 +225,7 @@ def encoding(circuit1, q1,q2,q3):
 
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
-    circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x01(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
 
@@ -244,7 +243,7 @@ def encoding(circuit1, q1,q2,q3):
 
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
-    circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x01(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
 
@@ -252,7 +251,7 @@ def encoding(circuit1, q1,q2,q3):
 
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
-    circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x01(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
 
@@ -260,7 +259,7 @@ def encoding(circuit1, q1,q2,q3):
 
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
-    circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x01(q2)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
 
@@ -268,7 +267,7 @@ def encoding(circuit1, q1,q2,q3):
 
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
-    circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x01(q2)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
 
@@ -276,7 +275,7 @@ def encoding(circuit1, q1,q2,q3):
 
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
-    circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x01(q1)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
 
@@ -284,7 +283,7 @@ def encoding(circuit1, q1,q2,q3):
 
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
-    circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x01(q1)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
 
@@ -391,7 +390,6 @@ q1, q2, q3= qutrits1[0], qutrits1[1], qutrits1[2]
 
 q4 = qutrits1[3]
 
-
 # cмена нач сост:
 circuit1.append([h(q1)], strategy=InsertStrategy.INLINE)
 #circuit1.append([h(q2)], strategy=InsertStrategy.INLINE)
@@ -400,8 +398,10 @@ circuit1.append([h(q1)], strategy=InsertStrategy.INLINE)
 
 encoding(circuit1, q1,q2,q3)
 
+
 q1, q4 = q4, q1
 
+ 
 decoding(circuit1, q1, q2, q3)
 
 circuit1.append([hr(q1)], strategy=InsertStrategy.INLINE)
@@ -412,7 +412,4 @@ res1 = sim.simulate(circuit1)
 ro_ab = cirq.final_density_matrix(circuit1, qubit_order=qutrits1)
 
 print(ro_ab[0][0])
-
-
-
-
+print(res1)
