@@ -58,8 +58,13 @@ def make_ms_matrix(N, fi, hi, i, j, k, l):
     return linalg.expm(m)
 
 # Класс для создания двухкудитных гейтов
-class TwoQuditMSGate01(gate_features.TwoQubitGate
+class TwoQS(gate_features.TwoQubitGate
                       ):
+
+    def __init__(self, coaf, diag_i='XX'):
+        #self.mat = mat
+        self.diag_info = diag_i
+        self.coaf = coaf
 
     def _json_dict_(self):
         return {
@@ -74,36 +79,7 @@ class TwoQuditMSGate01(gate_features.TwoQubitGate
         return (3, 3,)
 
     def _unitary_(self):
-        matrix = make_ms_matrix(3, 0, np.pi / 2,0,1,0,1)
-        return matrix
-
-    def num_controls(self):
-        return 2
-
-    def _circuit_diagram_info_(self, args: 'cirq.CircuitDiagramInfoArgs'
-                               ) -> 'cirq.CircuitDiagramInfo':
-        return protocols.CircuitDiagramInfo(
-            wire_symbols=('XX0101',
-                          'XX0101'))
-
-
-class rTwoQuditMSGate01(gate_features.TwoQubitGate
-                      ):
-
-    def _json_dict_(self):
-        return {
-            'cirq_type': self.__class__.__name__
-        }
-
-    @classmethod
-    def _from_json_dict_(cls, **kwargs):
-        return cls()
-
-    def _qid_shape_(self):
-        return (3, 3,)
-
-    def _unitary_(self):
-        matrix = make_ms_matrix(3, 0, -np.pi / 2,0,1,0,1)
+        matrix = make_ms_matrix(3, 0, -np.pi / 2,self.coaf[0],self.coaf[1],self.coaf[2],self.coaf[3])
         return matrix
 
     def num_controls(self):
@@ -117,21 +93,55 @@ class rTwoQuditMSGate01(gate_features.TwoQubitGate
 
 
 def CX(cirquit, q1, q2):
-    u1 = U(R(np.pi/2, np.pi/2, 0, 1), 'Rx(-π)12')
-    u2 = U(R(0, - np.pi , 0, 1), 'Ry(π/2)01')
+    u1 = U(R(np.pi / 2, np.pi / 2, 0, 2), 'Rx(-π)12')
+    u2 = U(R(0, - np.pi, 0, 2), 'Ry(π/2)01')
     u3 = U(R(0, -np.pi, 0, 1), 'Rx(-π)01')
-    u4 = U(R(np.pi / 2, -np.pi / 2, 0, 1), 'Ry(-π/2)01')
-    xx = TwoQuditMSGate01()
+    u4 = U(R(np.pi / 2, -np.pi / 2, 0, 2), 'Ry(-π/2)01')
+    xx = TwoQS((0,2,0,1))
     cirquit.append([u1(q1)], strategy=InsertStrategy.INLINE)
     cirquit.append([xx(q1, q2)], strategy=InsertStrategy.INLINE)
     cirquit.append([u2(q1), u3(q2)], strategy=InsertStrategy.INLINE)
     cirquit.append([u4(q1)], strategy=InsertStrategy.INLINE)
+
+class rTwoQS(gate_features.TwoQubitGate
+                      ):
+
+    def __init__(self, coaf, diag_i='XX'):
+        #self.mat = mat
+        self.diag_info = diag_i
+        self.coaf = coaf
+
+    def _json_dict_(self):
+        return {
+            'cirq_type': self.__class__.__name__
+        }
+
+    @classmethod
+    def _from_json_dict_(cls, **kwargs):
+        return cls()
+
+    def _qid_shape_(self):
+        return (3, 3,)
+
+    def _unitary_(self):
+        matrix = make_ms_matrix(3, 0, np.pi / 2,self.coaf[0],self.coaf[1],self.coaf[2],self.coaf[3])
+        return matrix
+
+    def num_controls(self):
+        return 2
+
+    def _circuit_diagram_info_(self, args: 'cirq.CircuitDiagramInfoArgs'
+                               ) -> 'cirq.CircuitDiagramInfo':
+        return protocols.CircuitDiagramInfo(
+            wire_symbols=('XX0101',
+                          'XX0101'))
+
 def rCX(cirquit, q1, q2):
-    u1 = U(R(np.pi/2, - np.pi / 2, 0, 1), 'Rx(-π)12')
-    u2 = U(R(0, np.pi, 0, 1), 'Ry(π/2)01')
+    u1 = U(R(np.pi / 2, - np.pi / 2, 0, 2), 'Rx(-π)12')
+    u2 = U(R(0, np.pi, 0, 2), 'Ry(π/2)01')
     u3 = U(R(0, np.pi, 0, 1), 'Rx(-π)01')
-    u4 = U(R(np.pi / 2, np.pi / 2, 0, 1), 'Ry(-π/2)01')
-    xx = rTwoQuditMSGate01()
+    u4 = U(R(np.pi / 2, np.pi / 2, 0, 2), 'Ry(-π/2)01')
+    xx = rTwoQS((0,2,0,1))
     cirquit.append([u4(q1)], strategy=InsertStrategy.INLINE)
     cirquit.append([u2(q1), u3(q2)], strategy=InsertStrategy.INLINE)
     cirquit.append([xx(q1, q2)], strategy=InsertStrategy.INLINE)
@@ -188,14 +198,31 @@ class Hr(cirq.Gate):
 
     def _circuit_diagram_info_(self, args):
         return 'U_enc'
+class X02r(cirq.Gate):
+    def _qid_shape_(self):
+        return (3,)
 
+    def _unitary_(self):
+        return R(0, -np.pi, 0, 2)
 
-    
+    def _circuit_diagram_info_(self, args):
+        return 'X2'
+class X01r(cirq.Gate):
+    def _qid_shape_(self):
+        return (3,)
+
+    def _unitary_(self):
+        return R(0, -np.pi, 0, 1)
+
+    def _circuit_diagram_info_(self, args):
+        return 'X1'
+
 x01 = X01()
 x02 = X02()
+x01r = X01r()
+x02r = X02r()
 h = H()
 hr = Hr()
-
 
 def encoding(circuit1, q1,q2,q3):
     ###1)
@@ -275,7 +302,7 @@ def encoding(circuit1, q1,q2,q3):
 
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
-    circuit1.append([x01(q1)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x01(q2)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
 
@@ -283,16 +310,16 @@ def encoding(circuit1, q1,q2,q3):
 
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
-    circuit1.append([x01(q1)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x01(q2)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
-
 
 def decoding(circuit1, q1,q2,q3):
     ###6)
+
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
-    circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x01(q2)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
 
@@ -300,7 +327,7 @@ def decoding(circuit1, q1,q2,q3):
 
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
-    circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x01(q2)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
 
@@ -308,7 +335,7 @@ def decoding(circuit1, q1,q2,q3):
 
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
-    circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x01(q2)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
 
@@ -316,7 +343,7 @@ def decoding(circuit1, q1,q2,q3):
 
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
-    circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x01(q2)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
 
@@ -324,7 +351,7 @@ def decoding(circuit1, q1,q2,q3):
 
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
-    circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x01(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
 
@@ -332,7 +359,7 @@ def decoding(circuit1, q1,q2,q3):
 
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
-    circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x01(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q2)], strategy=InsertStrategy.INLINE)
 
@@ -350,22 +377,22 @@ def decoding(circuit1, q1,q2,q3):
 
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
-    circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x01(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
 
-    CX(circuit1, q3, q1)
+    rCX(circuit1, q3, q1)
 
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
-    circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x01(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
 
     ###1)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
-    circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x01(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
 
@@ -373,11 +400,10 @@ def decoding(circuit1, q1,q2,q3):
 
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
-    circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
+    circuit1.append([x01(q3)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q1)], strategy=InsertStrategy.INLINE)
     circuit1.append([x02(q3)], strategy=InsertStrategy.INLINE)
-    
-    
+
 sim = cirq.Simulator()
 circuit1 = cirq.Circuit()
 qutrits1 = []
@@ -386,30 +412,67 @@ qutrits1.append(cirq.LineQid(1, dimension=3))
 qutrits1.append(cirq.LineQid(2, dimension=3))
 qutrits1.append(cirq.LineQid(3, dimension=3))
 
-q1, q2, q3= qutrits1[0], qutrits1[1], qutrits1[2]
+q1, q2, q3 = qutrits1[0], qutrits1[1], qutrits1[2]
 
 q4 = qutrits1[3]
 
 # cмена нач сост:
 circuit1.append([h(q1)], strategy=InsertStrategy.INLINE)
-#circuit1.append([h(q2)], strategy=InsertStrategy.INLINE)
-#circuit1.append([h(q3)], strategy=InsertStrategy.INLINE)
+circuit1.append([h(q2)], strategy=InsertStrategy.INLINE)
+circuit1.append([h(q3)], strategy=InsertStrategy.INLINE)
 
+
+alf11 = random.randint(0, 1000) / 1000 * 2 * np.pi
+alf21 = random.randint(0, 1000) / 1000 * 2 * np.pi
+povorot = R(alf11, alf21, 0, 1)
+pg = U(povorot)
+circuit1.append([pg(qutrits1[0])], strategy=InsertStrategy.INLINE)
+
+alf12 = random.randint(0, 1000) / 1000 * 2 * np.pi
+alf22 = random.randint(0, 1000) / 1000 * 2 * np.pi
+povorot = R(alf12, alf22, 0, 1)
+pg = U(povorot)
+circuit1.append([pg(qutrits1[1])], strategy=InsertStrategy.INLINE)
+
+alf13 = random.randint(0, 1000) / 1000 * 2 * np.pi
+alf23 = random.randint(0, 1000) / 1000 * 2 * np.pi
+povorot = R(alf13, alf23, 0, 1)
+pg = U(povorot)
+circuit1.append([pg(qutrits1[2])], strategy=InsertStrategy.INLINE)
 
 encoding(circuit1, q1,q2,q3)
 
-
 q1, q4 = q4, q1
 
- 
+x01 = X01r()
+x02 = X02r()
 decoding(circuit1, q1, q2, q3)
+x01 = X01r()
+x02 = X02r()
+
+povorot = R(alf11, -alf21, 0, 1)
+pg = U(povorot)
+circuit1.append([pg(qutrits1[3])], strategy=InsertStrategy.INLINE)
+
+povorot = R(alf12, -alf22, 0, 1)
+pg = U(povorot)
+circuit1.append([pg(qutrits1[1])], strategy=InsertStrategy.INLINE)
+
+povorot = R(alf13, -alf23, 0, 1)
+pg = U(povorot)
+circuit1.append([pg(qutrits1[2])], strategy=InsertStrategy.INLINE)
 
 circuit1.append([hr(q1)], strategy=InsertStrategy.INLINE)
-#circuit1.append([hr(q2)], strategy=InsertStrategy.INLINE)
-#circuit1.append([hr(q3)], strategy=InsertStrategy.INLINE)
+circuit1.append([hr(q2)], strategy=InsertStrategy.INLINE)
+circuit1.append([hr(q3)], strategy=InsertStrategy.INLINE)
+
 
 res1 = sim.simulate(circuit1)
 ro_ab = cirq.final_density_matrix(circuit1, qubit_order=qutrits1)
 
 print(ro_ab[0][0])
 print(res1)
+
+
+
+
