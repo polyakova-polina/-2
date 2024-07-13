@@ -33,37 +33,38 @@ PMS0 = 0.04
 rrange = range(gvot, N_X, gvot)
 #n_t = 4
 
-zZ = np.array([[1,0]]).T
-eE = np.array([[0,1]]).T
+zZ = np.array([[1,0,0]]).T
+eE = np.array([[0,1,0]]).T
+fF = np.array([[0,0,1]]).T
 
-A = [zZ, eE]
+A = [zZ, eE,fF]
 
 B = []
 
-def make_traspose(sps):
-    ar = np.eye(27)
+def make_traspose(sps,N = 27):
+    ar = np.eye(N)
     for par in sps:
         ar[par[0], par[0]], ar[par[1], par[0]] = 0, 1
         #ar[par[1], par[1]], ar[par[1], par[0]] = ar[par[1], par[0]], ar[par[1], par[1]]
     return ar
 
 Pres_mat = make_traspose(((3,6), (4,2), (9,5), (10,7), (12,4), (13, 3),       (2,9), (5,10), (6,12), (7,13), (1,2), (2,1), (4,5), (5,4)))
-Pres_mat = make_traspose(((3,1), (9,2), (1,3), (10,5), (12,6), (13,7), (2,9), (5,10), (6, 12), (7,13)))
-
+Pres_mat = make_traspose(((3,1), (9,2), (1,3), (10,5), (12,6), (13,7), (2,9), (5,10), (6, 12), (7,13), (9,4), (4,9)))
+Pres_mat = make_traspose(((4,2), (9,4), (10,5), (12,6), (13, 7), (2,9), (5, 10), (6, 12), (7,13)))
 ccx_mat = make_traspose(((12,13),(13,12)))
-
+CCCX_mat = make_traspose(((39,40),(40,39)), 27*3)
 Unpres_mat = Pres_mat.T
 
 
-for i1 in range(2):
-    for i2 in range(2):
+for i1 in range(3):
+    for i2 in range(3):
         B.append(np.kron(A[i1], A[i2]))
 
 def partial_trace(rho_ab):
-    tr = np.eye(2) - np.eye(2)
-    for i in range(2):
-        for j in range(2):
-            for k in range(4):
+    tr = np.eye(3) - np.eye(3)
+    for i in range(3):
+        for j in range(3):
+            for k in range(9):
                 tr = tr + np.kron(A[i].T, B[k].T) @ rho_ab @ np.kron(A[j], B[k]) * A[i] @ A[j].T
     return tr
 
@@ -457,6 +458,21 @@ class Press_gate(cirq.Gate):
     def _circuit_diagram_info_(self, args):
         return self.diag_info
 
+class CCCX_g(cirq.Gate):
+    def __init__(self, mat,  diag_i='R'):
+        self.mat = mat
+        self.diag_info = diag_i
+
+
+    def _qid_shape_(self):
+        return (3,3,3,3,)
+
+    def _unitary_(self):
+        return self.mat
+
+    def _circuit_diagram_info_(self, args):
+        return self.diag_info
+
 
 
 def U1_clear(cirquit, Q1, Q2):
@@ -527,17 +543,14 @@ class QutritAmplitudeChannel(QuditGate):
         #self.p_matrix[0, 0] += 1
         '''
 
-        if p_matrix is None:
-            self.p_matrix = self.p1 / (self.d ** 2) * np.ones((self.d, self.d))
-        else:
-            self.p_matrix = p_matrix
-        self.p_matrix[0, 0] += (1 - self.p1)  # identity probability
-        self.p_matrix = np.array([[(1 - self.p1), self.p1 / 3], [self.p1 / 3, self.p1 / 3]])
-        self.p_matrix = np.ones((2,2))
-        self.p_matrix[0][0] = self.p1
-        self.p_matrix[0][1] = 1 - self.p1
-        self.p_matrix[1][0] = 1 - self.p1/3
-        self.p_matrix[1][1] = 1 - self.p1/3
+        p = 0.5
+        ch = cirq.kraus_to_choi([self.p1 * np.array([[0, 1, 0], [1, 0, 0], [0, 0, 1]]), (1 - self.p1) * np.eye(3)])
+        self.p_matrix = self.p1 / (self.d ** 2) * np.ones((self.d, self.d))
+        self.p_matrix = np.eye(9)
+        for i in range(0,3):
+            for j in range(0,3):
+                self.p_matrix[i][j] = np.trace(ch[3*i:3*i+3][3*j:3*j+3])
+
 
         #print('prob[0,0]', self.p_matrix[0, 0])
         #print('prob_sum', self.p_matrix.sum())
@@ -546,11 +559,16 @@ class QutritAmplitudeChannel(QuditGate):
 
     def _mixture_(self):
 
-        Ea1 = np.array([[0, 1, 0], [1, 0, 0], [0, 0, 0]])
+        Ea1 = np.array([[0, 1, 0], [1, 0, 0], [0, 0, 1]])
         Ea2 = np.array([[0, self.p1**0.5, 0], [0, 0, 0], [0, 0, 0]])
         Ea3 = np.array([[0, 0, self.p1**0.5], [0, 0, 0], [0, 0, 0]])
         id = np.eye(3)
-        shiz_massiv = [Ea1, id]
+        shiz_massiv = []
+        ch = cirq.kraus_to_choi([self.p1 * np.array([[0, 1, 0], [1, 0, 0], [0, 0, 1]]), (1 - self.p1) * np.eye(3)])
+        #self.p_matrix = self.p1 / (self.d ** 2) * np.ones((self.d, self.d))
+        for i in range(0, 3):
+            for j in range(0, 3):
+                shiz_massiv.append(ch[3 * i:3 * i + 3][3 * j:3 * j + 3])
         return tuple(zip(self.p_matrix.flatten(), shiz_massiv))
 
     def _circuit_diagram_info_(self, args):
@@ -558,82 +576,85 @@ class QutritAmplitudeChannel(QuditGate):
 
 
 
-def main():
+px = R(0, np.pi, 0, 1)
+X = U(px)
+
+
+def main(PRESSURE):
+    s = 0
     answer = []
     for P in np.linspace(0.001,0.999,100):
         circuit1 = cirq.Circuit()
-        alf1 = random.randint(0, 1000) / 1000 * 2 * np.pi
+        alf1 = random.randint(-1000, 1000) / 1000 * np.pi
         alf2 = random.randint(-1000, 1000) / 1000 * np.pi
         alf1 = 0
-        alf2 = 0
+        alf2 = np.pi/2
         qutrits1 = []
         for j in range(3):
             qutrits1.append(cirq.LineQid(j, dimension=3))
-        povorot = R(alf1, alf2, 0, 1)
-        pg = U(povorot)
-        circuit1.append([pg(qutrits1[0])], strategy=InsertStrategy.INLINE)
-
-
-
         q0 = qutrits1[0]
         q1 = qutrits1[1]
         q2 = qutrits1[2]
+        povorot = R(alf1, alf2, 0, 1)
+        pg = U(povorot)
+        circuit1.append([pg(q0)], strategy=InsertStrategy.INLINE)
+
         code(circuit1, q0, q1, q2)
-        '''
-        CX(circuit1, q0, q1)
-        CX(circuit1, q0, q2)
-        '''
 
         press_gate = Press_gate(Pres_mat)
-        circuit1.append([press_gate(q0, q1, q2)], strategy=InsertStrategy.INLINE)
+        if PRESSURE:
+            circuit1.append([press_gate(q0, q1, q2)], strategy=InsertStrategy.INLINE)
 
-        dpg_t = QutritAmplitudeChannel((P))
-        #circuit1.append([dpg_t.on(q2)], strategy=InsertStrategy.INLINE)
-        ind = random.randint(0, 1000)
+        if PRESSURE:
+            ind = random.randint(1, 1000)
+            if ind < P * 1000:
+                circuit1.append([X(q1)], strategy=InsertStrategy.INLINE)
+            ind = random.randint(1, 1000)
+            if ind < P * 1000:
+                circuit1.append([X(q2)], strategy=InsertStrategy.INLINE)
 
-        if ind < P * 1000:
-            povoro = R(0, np.pi, 0, 1)
-            demp = U(povoro)
-            circuit1.append([demp(q1)], strategy=InsertStrategy.INLINE)
+        if not PRESSURE:
+            ind = random.randint(1, 1000)
+            if ind < P * 1000:
+                circuit1.append([X(q1)], strategy=InsertStrategy.INLINE)
+            ind = random.randint(1, 1000)
+            if ind < P * 1000:
+                circuit1.append([X(q2)], strategy=InsertStrategy.INLINE)
+            ind = random.randint(1, 1000)
+            if ind < P * 1000:
+                circuit1.append([X(q0)], strategy=InsertStrategy.INLINE)
 
-        ind = random.randint(0, 1000)
-        if ind < P * 1000:
-            povoro = R(0, np.pi, 0, 1)
-            demp = U(povoro)
-            circuit1.append([demp(q2)], strategy=InsertStrategy.INLINE)
-        '''
-        circuit1.append([dpg_t.on(q1)], strategy=InsertStrategy.INLINE)
-        circuit1.append([dpg_t.on(q2)], strategy=InsertStrategy.INLINE)
-        '''
-        press_gate = Press_gate(Unpres_mat)
-        circuit1.append([press_gate(q0, q1, q2)], strategy=InsertStrategy.INLINE)
+        upress_gate = Press_gate(Unpres_mat)
+        if PRESSURE:
+            circuit1.append([upress_gate(q0, q1, q2)], strategy=InsertStrategy.INLINE)
 
         decode(circuit1, q0, q1, q2)
-        '''
-        CX(circuit1, q0, q1)
-        CX(circuit1, q0, q2)
-        CCX(circuit1, q2, q1, q0)
-        '''
-        #povoro = R(0, 0, 0, 1)
-        #demp = U(povoro)
-        #circuit1.append([demp(q0)], strategy=InsertStrategy.INLINE)
-        #circuit1.append([demp(q1)], strategy=InsertStrategy.INLINE)
-        #circuit1.append([demp(q2)], strategy=InsertStrategy.INLINE)
 
         povorot = R(alf1, -alf2, 0, 1)
         pg = U(povorot)
-        circuit1.append([pg(qutrits1[0])], strategy=InsertStrategy.INLINE)
+        circuit1.append([pg(q0)], strategy=InsertStrategy.INLINE)
 
-        #circuit1.append([demp(q0)], strategy=InsertStrategy.INLINE)
+        if not PRESSURE and P > 0.5:
+            circuit1.append([X(q0)], strategy=InsertStrategy.INLINE)
+
+        #circuit1.append([cirq.measure(qutrits1[0])])
+        #sim = cirq.Simulator()
+        #res1 = sim.simulate(circuit1)
+        #measured_bit = res1.measurements[str(qutrits1[0])][0]
+        #answer.append(measured_bit)
         answer.append(np.trace(abs(cirq.final_density_matrix(circuit1, qubit_order=qutrits1))[0:9][0:9]))
+        #answer.append(partial_trace(cirq.final_density_matrix(circuit1, qubit_order=qutrits1))[0][0])
+        s += np.trace(abs(cirq.final_density_matrix(circuit1, qubit_order=qutrits1))[0:9][0:9])
+    print(s / 100)
 
-    print(cirq.final_density_matrix(circuit1, qubit_order=qutrits1))
     return answer
 
-plt.scatter(np.linspace(0,1,100), main())
+plt.scatter(np.linspace(0,1,100), main(True), color = 'r')
+plt.scatter(np.linspace(0,1,100), main(False), color = 'b')
+#plt.scatter(np.linspace(0,1,100), 1 - np.linspace(0,1,100))
 plt.show()
 
-'''
+
 circuit1 = cirq.Circuit()
 
 qutrits1 = []
@@ -652,5 +673,24 @@ demp = U(povoro)
 #CCX(circuit1, q0,q1,q2)
 pg = Press_gate(Pres_mat)
 #print(abs(cirq.final_density_matrix(circuit1, qubit_order=qutrits1)[0][9]))
-print(Pres_mat)
-'''
+#print(Pres_mat)
+
+def t(n):
+    if n == 0:
+        return '0'
+    nums = []
+    while n:
+        n, r = divmod(n, 3)
+        nums.append(str(r))
+    while len(nums) < 3:
+        nums.append(str(0))
+    return ''.join(reversed(nums))
+
+for i in range(27):
+    vec = np.zeros((1, 27)).T
+    vec[i] = 1
+    ans = Pres_mat @ vec
+    for j in range(27):
+        if ans[j] == 1:
+            print(t(i), t(j))
+
